@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 # These enum types correspond to different types as defined in the protocol specification (look at protocol.md)
 class PacketType(IntEnum):
     HEARTBEAT = 1
@@ -7,6 +8,7 @@ class PacketType(IntEnum):
     MESSAGE = 3
     RESPONSE = 4
     LOGOUT = 5
+
 
 class ResponseCode(IntEnum):
     OK = 0

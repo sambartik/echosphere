@@ -2,22 +2,28 @@ from shared.errors import NetworkError
 
 
 class DestinationUnreachable(NetworkError):
-  pass
+    pass
+
 
 class ApplicationError(Exception):
-  pass
+    pass
+
 
 class LoginError(ApplicationError):
-  pass
+    pass
+
 
 class InvalidUsernameError(LoginError):
-  pass
+    pass
+
 
 class UsernameTakenError(LoginError):
-  pass
+    pass
+
 
 class WrongPasswordError(LoginError):
-  pass
+    pass
+
 
 class MessageError(ApplicationError):
-  pass
+    pass
