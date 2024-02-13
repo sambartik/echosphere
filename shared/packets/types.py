@@ -13,4 +13,5 @@ class ResponseCode(IntEnum):
     INVALID_USERNAME = 1
     TAKEN_USERNAME = 2
     INVALID_MESSAGE = 3
-    GENERIC_ERROR = 4
+    WRONG_PASSWORD = 4
+    GENERIC_ERROR = 5
