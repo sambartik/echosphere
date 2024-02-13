@@ -10,7 +10,7 @@ The EchoSphere Chat Protocol, version 1 (ESCP in short) is a simple binary proto
 +----------+----------+--------------+----------------------------------------+
 ```
 
-The header consists of 3 fields in the following order: protocol version, packet type, payload length. The protocol version is an unsigned number that helps with identifying a newer versions of this protocol in the future. For now, the only acceptable protocol version is 1. Newer versions do not guarantee backwards compatibility! The packet type field is also an unsigned number and it distinguishes between different kinds of packets (more in the packet types section). The payload length is an unsigned number of bytes of payload that follows the header.
+The header consists of 3 fields in the following order: protocol version, packet type, payload length. The protocol version is an unsigned number that helps with identifying a newer versions of this protocol in the future. For now, the only acceptable protocol version is 1. Newer versions do not guarantee backwards compatibility! The packet type field is also an unsigned number, and it distinguishes between different kinds of packets (more in the packet types section). The payload length is an unsigned number of bytes of payload that follows the header.
 
 The payload is a sequence of bytes that are interpreted differently based on the packet type specified in the header. Currently, the maximum length of any payload is 4096 bytes. Each packet type can subsequently define this limit to be lower. A packet can also have a payload length of 0, effectively having a packet without any payload. Such an example is the Heartbeat packet.
 
@@ -24,7 +24,7 @@ When either the client or server sends a request packet, that side of the commun
 2. Response packets
 These types of packets are sent as a response to an appropriate request packet that was received. In the current protocol version, there is only a single response packet type to every request packet and that is the Response packet (more in packet types section).
 3. Meta packets
-They serve as a spontanious information that was not requested and therefore does not need to be responded to. An example of such packet is the Heartbeat packet.
+They serve as spontaneous information that was not requested and therefore does not need to be responded to. An example of such packet is the Heartbeat packet.
 
 # Packet Types
 The protocol defines a set of different packet types, which determines how will be the payload handled and parsed.
@@ -42,7 +42,7 @@ Max Payload Len: 0
 ```
 
 ## 2. Login packet (request packet)
-The login packet is sent by the client after a successful estabilisment of a TCP connection with the server. It acts as an introduction of a client to the server and includes required information for the server such as the client's username and the password to the server.
+The login packet is sent by the client after a successful establishment of a TCP connection with the server. It acts as an introduction of a client to the server and includes required information for the server such as the client's username and the password to the server.
 
 ```
 +--------+---------+--------------+------------------------------+
@@ -52,9 +52,9 @@ Type: 2
 Max Payload Len: 256 bytes
 ```
 
-The payload is an UTF-8 string that consists of client's username and a server's password, separated by the character `"|"`.
-The username must be at least 3 characters long and at most 12 characters long. It can only includes alphanumeric characters.
-The server's password length can range from 0 to 48 characters. If the server's password is 0, then it has no password set. All characters are permited.
+The payload is a UTF-8 string that consists of client's username and a server's password, separated by the character `"|"`.
+The username must be at least 3 characters long and at most 12 characters long. It can only include alphanumeric characters.
+The server's password length can range from 0 to 48 characters. If the server's password is 0, then it has no password set. All characters are permitted.
 
 Payload format: `"<username>|<password>"`. In case logging into a server that has not set a password, then the payload would look like: `"<username>|"`.
 
@@ -65,7 +65,7 @@ Server responds to this packet by sending a Response packet with the response co
    - 0: When the login was successful
 
 ## 3. Message packet (request/meta packet)
-The purpose of this packet is to deliver messages between communication parties. Both server and client send this type of packet. However, when the client sends this packet, it is considered to be a request packet and therefore the client must wait for a response. This allows the server to reject some of the client messages because of formating issues, etc.
+The purpose of this packet is to deliver messages between communication parties. Both server and client send this type of packet. However, when the client sends this packet, it is considered to be a request packet and therefore the client must wait for a response. This allows the server to reject some of the client messages because of formatting issues, etc.
 In the other case, when server is sending this packet, it is considered to be a meta packet and clients that receive it do not respond to it, but rather display it in client's UI.
 
 ```
@@ -76,7 +76,7 @@ Type: 3
 Max Payload Len: 4096
 ```
 
-The payload is an UTF-8 encoded string in the following format: `"<sender's username>|<message>"`. The message needs to be at least 1 and at most 1000 characters long.
+The payload is a UTF-8 encoded string in the following format: `"<sender's username>|<message>"`. The message needs to be at least 1 and at most 1000 characters long.
 
 There are 2 types of messages:
    - User messages - These are sent by user to be received by other clients
@@ -103,14 +103,14 @@ Different kinds of responses are distinguished based on the response code which 
 
 ### Valid response codes:
 
-| Response Code | Meaning           | Description                                                               |
-|---------------|-------------------|---------------------------------------------------------------------------|
-| 0             | OK                | The request was valid, there were no issues                               |
-| 1             | INVALID_USERNAME  | The provided username is invalid (formatting, etc)                        |
-| 2             | TAKEN_USERNAME    | The username is being used by another user                                |
-| 3             | INVALID_MESSAGE   | The message format is invalid or breaches content rules of the server     |
-| 4             | WRONG_PASSWORD    | The provided password for the server is incorrect                         |
-| 5             | GENERIC_ERROR     | An unexpected error occured, which is not covered by other codes          |
+| Response Code | Meaning          | Description                                                           |
+|---------------|------------------|-----------------------------------------------------------------------|
+| 0             | OK               | The request was valid, there were no issues                           |
+| 1             | INVALID_USERNAME | The provided username is invalid (formatting, etc)                    |
+| 2             | TAKEN_USERNAME   | The username is being used by another user                            |
+| 3             | INVALID_MESSAGE  | The message format is invalid or breaches content rules of the server |
+| 4             | WRONG_PASSWORD   | The provided password for the server is incorrect                     |
+| 5             | GENERIC_ERROR    | An unexpected error occurred, which is not covered by other codes     |
 
 ## 5. Logout packet (meta packet)
 Sent only by the clients to indicate to the server that the user is leaving and soon will close the connection as well.
@@ -134,4 +134,4 @@ Max Payload Len: 0 byte
 9. Client closes the TCP connection.
 
 # Other information
-When a user joins or leaves the server, the server must send a system message to all of the other clients notifying them of such an event. Most of the time, user messages sent to the server will be broadcaster to all other clients, however the server may handle special types of messages as commands and may consequently send a system message to one or more clients, however that is not part of the specification.
+When a user joins or leaves the server, the server must send a system message to all the other clients notifying them of such an event. Most of the time, user messages sent to the server will be broadcaster to all other clients, however the server may handle special types of messages as commands and may consequently send a system message to one or more clients, however that is not part of the specification.

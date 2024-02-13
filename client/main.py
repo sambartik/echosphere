@@ -1,6 +1,6 @@
+import logging
 import os
 import sys
-import logging
 import traceback
 
 # Add the parent directory of the current script to sys.path
@@ -9,7 +9,6 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 
-from shared.utils.concurent_task_group import ConcurentTasksGroup
 from shared.utils.logging_setup import configure_logging
 from shared.validators import valid_username
 from shared.errors import NetworkError
@@ -82,7 +81,7 @@ class ClientApplication:
         self.networking.disconnect()
         self.ui.exit()
         if err:
-            await self.ui.alert(title="ChatClient", text=f"Well, something baad happend :(.\nError: {err}")
+            await self.ui.alert(title="ChatClient", text=f"Well, something bad happened :(.\nError: {err}")
 
     async def display_message(self, username: str | None, message: str):
         """
