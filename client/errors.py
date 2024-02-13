@@ -16,5 +16,8 @@ class InvalidUsernameError(LoginError):
 class UsernameTakenError(LoginError):
   pass
 
+class WrongPasswordError(LoginError):
+  pass
+
 class MessageError(ApplicationError):
   pass

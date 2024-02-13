@@ -35,6 +35,9 @@ class ServerNetworking(EventEmitter):
       if self.username_is_taken(packet.username):
         return protocol.send_packet(ResponsePacket(ResponseCode.TAKEN_USERNAME))
       
+      if packet.server_password != self.server_password:
+        return protocol.send_packet(ResponsePacket(ResponseCode.WRONG_PASSWORD))
+      
       protocol.send_packet(ResponsePacket(ResponseCode.OK))
       self.connections[protocol].username = packet.username
       self.emit("user_joined", protocol, packet.username)
@@ -69,10 +72,10 @@ class ServerNetworking(EventEmitter):
     protocol.on("connection_lost", self.on_connection_close)
     return protocol
   
-  async def serve(self, host: str, port: int):
+  async def serve(self, host: str, port: int, server_password: str | None):
     if self.server:
       raise Exception("Server is already running!")
-    
+    self.server_password = server_password
     self.server = await asyncio.get_event_loop().create_server(self.accept_connection, host, port)
     
     await self.server.serve_forever()

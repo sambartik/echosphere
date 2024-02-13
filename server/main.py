@@ -13,7 +13,7 @@ from shared.packets.definitions import *
 from server.ServerNetworking import ServerNetworking
 
 class ServerApplication:
-  def __init__(self, networking):
+  def __init__(self, networking: ServerNetworking):
     self.networking = networking
     self.connected_users = {}
     
@@ -36,15 +36,15 @@ class ServerApplication:
       
       protocol.send_packet(MessagePacket(sender, message))
   
-  async def start(self):
-    await self.networking.serve("localhost", 12300)
+  async def start(self, port: int, server_password: str | None):
+    await self.networking.serve("localhost", port, server_password)
 
 async def main():
   try:
     networking = ServerNetworking()
     app = ServerApplication(networking)
     
-    await app.start()
+    await app.start(12300, "my_password")
   except asyncio.CancelledError:
       print("Main task was canceled")
   except BaseExceptionGroup as e:

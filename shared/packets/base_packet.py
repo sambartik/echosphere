@@ -102,4 +102,4 @@ class Packet(ABC):
         try:
             return cls._from_payload(payload)
         except Exception as e:
-            raise BaseProtocolError("Something went wrong during the packet reconstruction from payload, whoops.") from e
+            raise BaseProtocolError(f"Something went wrong during the packet reconstruction from payload, sorry.") from e

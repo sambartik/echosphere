@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import socket
-from client.errors import InvalidUsernameError, DestinationUnreachable, LoginError, MessageError, UsernameTakenError
+from client.errors import InvalidUsernameError, DestinationUnreachable, LoginError, MessageError, UsernameTakenError, WrongPasswordError
 from shared.errors import ConnectionClosedError, NetworkError
 from shared.chat_protocol import ChatProtocol
 from shared.packets.definitions import LoginPacket, HeartbeatPacket, MessagePacket
@@ -61,7 +61,7 @@ class ClientNetworking(EventEmitter):
       logger.error(f"Could not disconnect from the server, received an error: {e}")
       raise NetworkError("There was an error when disconnecting from the server, sorry.")
   
-  async def join_server(self, host: str, port: int, username: str):
+  async def join_server(self, host: str, port: int, username: str, server_password: str | None):
     """
       Connects to a server with the username provided. After the connection is made, it is non-blocking.
       
@@ -69,6 +69,7 @@ class ClientNetworking(EventEmitter):
         Exception: If already connected to the server
         DestinationUnreachable: If the host can't be reached.
         InvalidUsernameError: If the username is already taken
+        WrongPasswordError: If the login is rejected because of incorrect server password provided.
         LoginError: When the server rejects the login because of a different reason
     """
     
@@ -84,7 +85,7 @@ class ClientNetworking(EventEmitter):
       protocol.on("packet_received", self.on_new_packet)
       protocol.on("connection_lost", self.on_connection_lost)
       
-      await self._login(username)
+      await self._login(username, server_password)
       self.heartbeat_task = asyncio.create_task(self._send_heartbeat_periodically(), name="Heartbeat")      
     except asyncio.CancelledError:
       logger.debug("join_server task cancelled.")
@@ -94,13 +95,14 @@ class ClientNetworking(EventEmitter):
       self.disconnect()
       raise DestinationUnreachable(f"The destination {host}:{port} is unreachable, sorry.")
 
-  async def _login(self, username: str):
+  async def _login(self, username: str, server_password: str | None):
     """
       Initiates a login request with the currently connected server.
       
       Raises:
         ConnectionClosedError: If there is no active connection with a server
         InvalidUsernameError: If the username is already taken
+        WrongPasswordError: If the server password is incorrect
         LoginError: When the server rejects the login because of a different reason
     """
     
@@ -108,12 +110,14 @@ class ClientNetworking(EventEmitter):
       raise ConnectionClosedError("Not connected to a server.")
     
     logger.debug("Sending a login packet to the server")
-    response = await self.connection[1].send_packet_and_wait(LoginPacket(username))
+    response = await self.connection[1].send_packet_and_wait(LoginPacket(username, server_password))
     logger.debug(f"Received a response: {response}")
     if response.response_code == ResponseCode.INVALID_USERNAME:
       raise InvalidUsernameError("The username is invalid, try a different one, sorry!")
     elif response.response_code == ResponseCode.TAKEN_USERNAME:
       raise UsernameTakenError("The username you have specified is already taken, try another one, sorry!")
+    elif response.response_code == ResponseCode.WRONG_PASSWORD:
+      raise WrongPasswordError("The server password provided is incorrect, sorry!")
     elif response.response_code != ResponseCode.OK:
       raise LoginError("There was an issue logging in to the server, sorry!")
     

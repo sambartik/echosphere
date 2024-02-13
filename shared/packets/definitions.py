@@ -65,7 +65,7 @@ class ResponsePacket(Packet):
     @classmethod
     def _from_payload(cls, payload):
         try:
-            response_code = ResponseCode(int.from_bytes(payload[0]))
+            response_code = ResponseCode(int.from_bytes(payload, byteorder="big"))
             return cls(response_code)
         except ValueError:
             raise InvalidPayloadError("The payload of Response packet contains an invalid response code, sorry!")

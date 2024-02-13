@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import traceback
 
 # Add the parent directory of the current script to sys.path
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -32,8 +33,8 @@ class ClientApplication:
   async def run(self):
     """ Starts the application and blocks until it exits. """
     try:
-      username, host, port = await self._config_prompt()
-      await self.networking.join_server(host, int(port), username)
+      username, host, port, server_password = await self._config_prompt()
+      await self.networking.join_server(host, int(port), username, server_password)
       await self.ui.draw()
       logger.info("Reached the end of run method.")
       await self.stop()
@@ -41,7 +42,8 @@ class ClientApplication:
       logger.info("Cancelling app")
       await self.stop()
     except Exception as e:
-      logger.info(f"Base exception in the run function: {type(e)}, {e}")
+      logger.error(f"Base exception in the run function: {type(e)}, {e}")
+      logger.error(traceback.format_exc())
       await self.stop(e)
 
   async def _config_prompt(self):
@@ -52,7 +54,7 @@ class ClientApplication:
         KeyboardInterrupt: If one of the dialogs was interrupted
       
       Returns:
-        A tuple: (username, host, port)
+        A tuple: (username, host, port, server_password)
     """
     title = "ChatClient"
     username = await self.ui.ask_for(title, text="Enter your username: ")
@@ -62,8 +64,9 @@ class ClientApplication:
     self.username = username
     host = await self.ui.ask_for(title, text="Enter server host: ", default="localhost")
     port = await self.ui.ask_for(title, text="Enter server port: ", default="12300")
-
-    return username, host, port
+    server_password = await self.ui.ask_for(title, text="Enter the server's password (leave empty for none): ", default="")
+    
+    return username, host, port, server_password
     
   async def stop(self, err=None):
     """
