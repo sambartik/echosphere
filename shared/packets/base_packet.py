@@ -66,8 +66,9 @@ class Packet(ABC):
 
         return packet_type, payload_length
 
+    @classmethod
     @abstractmethod
-    def _from_payload(self, payload: bytes):
+    def _from_payload(cls, payload: bytes):
         """
         An (internal/protected) abstract method for constructing a packet instance from a given payload.
         This method must be implemented by all subclasses of Packet.
