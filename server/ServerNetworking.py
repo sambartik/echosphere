@@ -30,12 +30,12 @@ class ServerNetworking(EventEmitter):
     
     if isinstance(packet, LoginPacket):
       if not valid_username(packet.username):
-        return protocol.send_packet(ResponsePacket(ResponseType.INVALID_USERNAME))
+        return protocol.send_packet(ResponsePacket(ResponseCode.INVALID_USERNAME))
       
       if self.username_is_taken(packet.username):
-        return protocol.send_packet(ResponsePacket(ResponseType.TAKEN_USERNAME))
+        return protocol.send_packet(ResponsePacket(ResponseCode.TAKEN_USERNAME))
       
-      protocol.send_packet(ResponsePacket(ResponseType.OK))
+      protocol.send_packet(ResponsePacket(ResponseCode.OK))
       self.connections[protocol].username = packet.username
       self.emit("user_joined", protocol, packet.username)
       return
@@ -44,9 +44,9 @@ class ServerNetworking(EventEmitter):
       # Get the sender's username based on the their protocol instance. (each connection has its own)
       sender_username = self.connections[protocol].username
       if not valid_message(packet.message) or sender_username is None:
-        return protocol.send_packet(ResponsePacket(ResponseType.INVALID_MESSAGE))
+        return protocol.send_packet(ResponsePacket(ResponseCode.INVALID_MESSAGE))
       
-      protocol.send_packet(ResponsePacket(ResponseType.OK))
+      protocol.send_packet(ResponsePacket(ResponseCode.OK))
       return self.emit("message_received", sender_username, packet.message)
     
     elif isinstance(packet, HeartbeatPacket):

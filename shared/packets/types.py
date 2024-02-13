@@ -8,7 +8,7 @@ class PacketType(IntEnum):
     RESPONSE = 4
     LOGOUT = 5
 
-class ResponseType(IntEnum):
+class ResponseCode(IntEnum):
     OK = 0
     INVALID_USERNAME = 1
     TAKEN_USERNAME = 2

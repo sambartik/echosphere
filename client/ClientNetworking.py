@@ -7,7 +7,7 @@ from shared.chat_protocol import ChatProtocol
 from shared.packets.definitions import LoginPacket, HeartbeatPacket, MessagePacket
 from shared.utils.event_emitter import EventEmitter
 
-from shared.packets.types import PacketType, ResponseType
+from shared.packets.types import PacketType, ResponseCode
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ClientNetworking(EventEmitter):
   """
     The class emits following events:
       - message_received (username: str | None, message: str): When a new message packet is received from the server
-      - connection_lost (err: Exception | None): When a connection is closed unexpectedly because of an error or the other side closed its end.
+      - connection_lost (err: Exception | None): When a connection is closed *unexpectedly* because of an error or the other side closed its end.
   """
   def __init__(self):
     EventEmitter.__init__(self, events=["message_received", "connection_lost"])
@@ -110,11 +110,11 @@ class ClientNetworking(EventEmitter):
     logger.debug("Sending a login packet to the server")
     response = await self.connection[1].send_packet_and_wait(LoginPacket(username))
     logger.debug(f"Received a response: {response}")
-    if response.response_type == ResponseType.INVALID_USERNAME:
+    if response.response_code == ResponseCode.INVALID_USERNAME:
       raise InvalidUsernameError("The username is invalid, try a different one, sorry!")
-    elif response.response_type == ResponseType.TAKEN_USERNAME:
+    elif response.response_code == ResponseCode.TAKEN_USERNAME:
       raise UsernameTakenError("The username you have specified is already taken, try another one, sorry!")
-    elif response.response_type != ResponseType.OK:
+    elif response.response_code != ResponseCode.OK:
       raise LoginError("There was an issue logging in to the server, sorry!")
     
     self.username = username
@@ -135,7 +135,7 @@ class ClientNetworking(EventEmitter):
     logger.debug("Sending a message packet...")
     response = await self.connection[1].send_packet_and_wait(MessagePacket(self.username, message))
     logger.debug(f"Received a response: {response}")
-    if response.response_type != ResponseType.OK:
+    if response.response_code != ResponseCode.OK:
       raise MessageError(f'The message was rejected by the server: "{message}"')
   
   async def _send_heartbeat_periodically(self, interval: int = 15):
