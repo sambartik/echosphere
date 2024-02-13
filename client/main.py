@@ -8,7 +8,7 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 
-from shared.utils.ConcurentTasksGroup import ConcurentTasksGroup
+from shared.utils.concurent_task_group import ConcurentTasksGroup
 from shared.utils.logging_setup import configure_logging
 from shared.validators import valid_username
 from shared.errors import NetworkError

@@ -3,15 +3,15 @@ from collections import deque
 from typing import Optional
 from shared.errors import BaseProtocolError, ConnectionClosedError, NetworkError
 from shared.packets import Packet, ResponsePacket, packet_factory
-from shared.utils.EventEmitter import EventEmitter
+from shared.utils.event_emitter import EventEmitter
 
-class AsyncioChatProtocol(asyncio.Protocol, EventEmitter):
+class ChatProtocol(asyncio.Protocol, EventEmitter):
   """
   An implementation of asyncio.Protocol along with additional helper methods.
   It inherits methods from shared.utils.EventEmitter and defines following events:
-    - packet_received (protocol: AsyncioChatProtocol, packet: Packet): When a new packet was received from the server
-    - connection_made (protocol: AsyncioChatProtocol): When a connection was made.
-    - connection_lost (protocol: AsyncioChatProtocol, err: Exception | None): When a connection was lost or closed.
+    - packet_received (protocol: ChatProtocol, packet: Packet): When a new packet was received from the server
+    - connection_made (protocol: ChatProtocol): When a connection was made.
+    - connection_lost (protocol: ChatProtocol, err: Exception | None): When a connection was lost or closed.
   
   For information how to subscribe to an event, please check shared.utils.EventEmitter.
   """

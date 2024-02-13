@@ -7,8 +7,8 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 
-from shared.protocol import AsyncioChatProtocol
-from shared.packets.packets import *
+from shared.chat_protocol import ChatProtocol
+from shared.packets.definitions import *
 
 from server.ServerNetworking import ServerNetworking
 
@@ -21,11 +21,11 @@ class ServerApplication:
     networking.on("user_left", self.user_left)
     networking.on("message_received", self.broadcast_message)
   
-  def user_joined(self, protocol:AsyncioChatProtocol, username: str):
+  def user_joined(self, protocol:ChatProtocol, username: str):
     self.broadcast_message(None, f"User {username} has joined!")
     self.connected_users[username] = protocol
   
-  def user_left(self, protocol: AsyncioChatProtocol, username: str, err: Exception):
+  def user_left(self, protocol: ChatProtocol, username: str, err: Exception):
     del self.connected_users[username]
     self.broadcast_message(None, f"User {username} has left!")
   

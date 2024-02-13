@@ -1,6 +1,6 @@
 from shared.errors import InvalidPayloadError
 from .base_packet import Packet
-from .enums import PacketType, ResponseType
+from .types import PacketType, ResponseType
 from .factory import register_packet
 
 

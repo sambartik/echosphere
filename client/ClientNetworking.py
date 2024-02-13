@@ -3,11 +3,11 @@ import logging
 import socket
 from client.errors import InvalidUsernameError, DestinationUnreachable, LoginError, MessageError, UsernameTakenError
 from shared.errors import ConnectionClosedError, NetworkError
-from shared.protocol import AsyncioChatProtocol
-from shared.packets.packets import LoginPacket, HeartbeatPacket, MessagePacket
-from shared.utils.EventEmitter import EventEmitter
+from shared.chat_protocol import ChatProtocol
+from shared.packets.definitions import LoginPacket, HeartbeatPacket, MessagePacket
+from shared.utils.event_emitter import EventEmitter
 
-from shared.packets.enums import PacketType, ResponseType
+from shared.packets.types import PacketType, ResponseType
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ClientNetworking(EventEmitter):
   """
     The class emits following events:
       - message_received (username: str | None, message: str): When a new message packet is received from the server
-      - connection_lost (err: Exception | None): When a connection is closed either caused by an error or not
+      - connection_lost (err: Exception | None): When a connection is closed unexpectedly because of an error or the other side closed its end.
   """
   def __init__(self):
     EventEmitter.__init__(self, events=["message_received", "connection_lost"])
@@ -30,11 +30,13 @@ class ClientNetworking(EventEmitter):
   
   def on_connection_lost(self, _, err: Exception | None):
     if err:
-      logger.error(f"Connection closing because an error occured: {err}")
+      logger.error(f"Connection lost because an error occured: {err}")
     else:
-      logger.debug(f"Conection closing")
-    self.disconnect()
-    self.emit("connection_lost", err)
+      logger.debug(f"Conection lost")
+    # In case we did not call disconnect beforehand, the connection drop was unexpected.
+    if self.connection:
+      self.emit("connection_lost", err or ConnectionClosedError("The connection was closed by the server unexpectedly."))
+      self.disconnect()
     
   def disconnect(self):
     """
@@ -75,7 +77,7 @@ class ClientNetworking(EventEmitter):
 
     try:
       logger.info(f"Joining a server {host}:{port} with the username {username}")
-      self.connection = await asyncio.get_running_loop().create_connection(lambda: AsyncioChatProtocol(), host, port)
+      self.connection = await asyncio.get_running_loop().create_connection(lambda: ChatProtocol(), host, port)
 
       # Set up event listeners
       protocol = self.connection[1]

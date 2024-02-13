@@ -1,5 +1,5 @@
 from .base_packet import Packet
-from .enums import PacketType
+from .types import PacketType
 
 """
     A helper mapping that helps to determine a class from a PacketType. Mainly helps the function packet_factory

@@ -1,10 +1,10 @@
 import asyncio
 from datetime import datetime
 
-from shared.protocol import AsyncioChatProtocol
-from shared.utils.EventEmitter import EventEmitter
+from shared.chat_protocol import ChatProtocol
+from shared.utils.event_emitter import EventEmitter
 from shared.validators import valid_message, valid_username
-from shared.packets.packets import *
+from shared.packets.definitions import *
 
 class Connection:
   def __init__(self, protocol, username=None):
@@ -25,7 +25,7 @@ class ServerNetworking(EventEmitter):
         return True
     return False
 
-  def on_new_packet(self, protocol: AsyncioChatProtocol, packet: Packet):
+  def on_new_packet(self, protocol: ChatProtocol, packet: Packet):
     print("SERVER: New packet: ", packet)
     
     if isinstance(packet, LoginPacket):
@@ -52,18 +52,18 @@ class ServerNetworking(EventEmitter):
     elif isinstance(packet, HeartbeatPacket):
       self.connections[protocol].last_heartbeat = datetime.now()
   
-  def on_new_connection(self, protocol: AsyncioChatProtocol):
+  def on_new_connection(self, protocol: ChatProtocol):
     print("SERVER: New connection!")
     self.connections[protocol] = Connection(protocol)
   
-  def on_connection_close(self, protocol: AsyncioChatProtocol, err: Exception):
+  def on_connection_close(self, protocol: ChatProtocol, err: Exception):
     print(f"SERVER: Connection closed (err: {err})")
     if self.connections[protocol].username:
       self.emit("user_left", protocol, self.connections[protocol].username, err)
     del self.connections[protocol]
   
-  def accept_connection(self) -> AsyncioChatProtocol:
-    protocol = AsyncioChatProtocol()
+  def accept_connection(self) -> ChatProtocol:
+    protocol = ChatProtocol()
     protocol.on("connection_made", self.on_new_connection)
     protocol.on("packet_received", self.on_new_packet)
     protocol.on("connection_lost", self.on_connection_close)

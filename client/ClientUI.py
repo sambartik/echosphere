@@ -10,7 +10,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.widgets import TextArea
 
-from shared.utils.EventEmitter import EventEmitter
+from shared.utils.event_emitter import EventEmitter
 
 logger = logging.getLogger(__name__)
 

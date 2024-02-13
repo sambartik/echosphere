@@ -4,7 +4,7 @@ from typing import Tuple
 
 from shared.errors import IncompleteHeaderError, InvalidPayloadError, BaseProtocolError, UnknownPacketError
 
-from .enums import PacketType
+from .types import PacketType
 
 
 class Packet(ABC):
