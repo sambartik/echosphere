@@ -14,8 +14,8 @@ from shared.validators import valid_username
 from shared.errors import NetworkError
 
 from client.errors import ApplicationError, MessageError
-from client.ClientUI import ClientUI
-from client.ClientNetworking import ClientNetworking
+from client.client_ui import ClientUI
+from client.client_networking import ClientNetworking
 
 
 class ClientApplication:
