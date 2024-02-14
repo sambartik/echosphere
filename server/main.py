@@ -10,7 +10,7 @@ import asyncio
 from shared.chat_protocol import ChatProtocol
 from shared.packets.definitions import *
 
-from server.ServerNetworking import ServerNetworking
+from server.server_networking import ServerNetworking
 
 
 class ServerApplication:
@@ -41,7 +41,10 @@ class ServerApplication:
             protocol.send_packet(MessagePacket(sender, message))
 
     async def start(self, port: int, server_password: str | None):
-        await self.networking.serve("localhost", port, server_password)
+        try:
+            await self.networking.serve("localhost", port, server_password)
+        except Exception as e:
+            print(f"An error occurred in start: {e}")
 
 
 async def main():
@@ -52,8 +55,8 @@ async def main():
         await app.start(12300, "my_password")
     except asyncio.CancelledError:
         print("Main task was canceled")
-    except BaseExceptionGroup as e:
-        print("Base exception?", e.exceptions)
+    except BaseException as e:
+        print("Base exception in main ", e)
 
     print("Goodbye.")
 

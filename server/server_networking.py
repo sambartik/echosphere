@@ -1,10 +1,10 @@
 import asyncio
 from datetime import datetime, timedelta
 
+from packet_handlers import get_packet_handler
 from shared.errors import ConnectionClosedError
 from shared.chat_protocol import ChatProtocol
 from shared.utils.event_emitter import EventEmitter
-from shared.validators import valid_message, valid_username
 from shared.packets.definitions import *
 
 
@@ -50,41 +50,14 @@ class ServerNetworking(EventEmitter):
     def on_new_packet(self, protocol: ChatProtocol, packet: Packet):
         print("SERVER: New packet: ", packet)
 
-        if isinstance(packet, LoginPacket):
-            if not valid_username(packet.username):
-                return protocol.send_packet(ResponsePacket(ResponseCode.INVALID_USERNAME))
-            if self.username_is_taken(packet.username):
-                return protocol.send_packet(ResponsePacket(ResponseCode.TAKEN_USERNAME))
-            if packet.server_password != self.server_password:
-                return protocol.send_packet(ResponsePacket(ResponseCode.WRONG_PASSWORD))
-
-            protocol.send_packet(ResponsePacket(ResponseCode.OK))
-            self.connections[protocol].username = packet.username
-            self.emit("user_joined", protocol, packet.username)
-            return
-
-        elif isinstance(packet, MessagePacket):
-            # Get the sender's username based on their protocol instance. (each connection has its own)
-            sender_username = self.connections[protocol].username
-            if not valid_message(packet.message) or sender_username is None:
-                return protocol.send_packet(ResponsePacket(ResponseCode.INVALID_MESSAGE))
-
-            protocol.send_packet(ResponsePacket(ResponseCode.OK))
-            return self.emit("message_received", sender_username, packet.message)
-
-        elif isinstance(packet, HeartbeatPacket):
-            self.connections[protocol].last_heartbeat = datetime.now()
-
-        elif isinstance(packet, LogoutPacket):
-            if self.connections[protocol].username is not None:
-                self.emit("user_left", protocol, self.connections[protocol].username, None)
-                """NOTE: By clearing the username field we mark the user as disconnected and the on_connection_close
-                hook won't have to emit another user_left event. This way we can distinguish between normal logouts
-                and unexpected connection drops."""
-                self.connections[protocol].username = None
-                protocol.close_connection()
-        else:
+        try:
+            handler = get_packet_handler(self, packet)
+            handler.handle_packet(protocol, packet)
+        except ValueError:
             print("SERVER: Unknown packet received, closing the connection.")
+            protocol.close_connection()
+        except Exception as e:
+            print("An unexpected error occurred while handling packet: ", e)
             protocol.close_connection()
 
     def on_new_connection(self, protocol: ChatProtocol):
