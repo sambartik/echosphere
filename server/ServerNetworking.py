@@ -118,7 +118,7 @@ class ServerNetworking(EventEmitter):
                         connection.protocol.close_connection()
                 await asyncio.sleep(interval)
         except asyncio.CancelledError:
-            pass
+            self.heartbeat_monitor_task = None
 
     async def serve(self, host: str, port: int, server_password: str | None):
         """ Starts the server and listens for incoming connections. """
