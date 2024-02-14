@@ -6,7 +6,7 @@ from client.errors import InvalidUsernameError, DestinationUnreachable, LoginErr
     WrongPasswordError
 from shared.chat_protocol import ChatProtocol
 from shared.errors import ConnectionClosedError, NetworkError
-from shared.packets.definitions import LoginPacket, HeartbeatPacket, MessagePacket
+from shared.packets.definitions import LoginPacket, HeartbeatPacket, MessagePacket, LogoutPacket
 from shared.packets.types import ResponseCode
 from shared.utils.event_emitter import EventEmitter
 
@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 class ClientNetworking(EventEmitter):
     """
-    The class emits following events: - message_received (username: str | None, message: str): When a new message
-    packet is received from the server - connection_lost (err: Exception | None): When a connection is closed
-    *unexpectedly* because of an error or the other side closed its end.
+    The class emits following events:
+    - message_received (username: str | None, message: str): When a new message packet is received from the server
+    - connection_lost (err: Exception | None): When a connection is closed *unexpectedly* because of an error or the other side closed its end.
     """
 
     def __init__(self):
@@ -58,7 +58,13 @@ class ClientNetworking(EventEmitter):
                 self.heartbeat_task.cancel()
                 self.heartbeat_task = None
 
-            self.connection[0].close()
+            # The connection was not closed prior calling disconnect, i.e. by the other end or because of an error.
+            # Send logout packet.
+            if not self.connection[0].is_closing():
+                logger.debug("Sending a close packet...")
+                self.connection[1].send_packet(LogoutPacket())
+                logger.debug("Closing the connection...")
+                self.connection[0].close()
             self.connection = None
             self.username = None
         except Exception as e:

@@ -78,6 +78,13 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
     async def wait_until_closed(self):
         return await self._closed_event.wait()
 
+    def close_connection(self):
+        """
+            Closes the connection, if it has been established. Otherwise, it will ignore the call.
+        """
+        if self.transport and not self.transport.is_closing():
+            self.transport.close()
+
     def send_packet(self, packet: Packet):
         """
           Sends a packet to the other end without waiting.

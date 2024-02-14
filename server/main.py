@@ -26,9 +26,12 @@ class ServerApplication:
         self.broadcast_message(None, f"User {username} has joined!")
         self.connected_users[username] = protocol
 
-    def user_left(self, protocol: ChatProtocol, username: str, err: Exception):
+    def user_left(self, _protocol: ChatProtocol, username: str, err: Exception | None):
         del self.connected_users[username]
-        self.broadcast_message(None, f"User {username} has left!")
+        if not err:
+            self.broadcast_message(None, f"User {username} has left!")
+        else:
+            self.broadcast_message(None, f"User {username} has lost the connection to the server!")
 
     def broadcast_message(self, sender: str | None, message: str):
         print(f"Broadcasting a message from {sender}")
