@@ -49,6 +49,7 @@ class ClientUI(EventEmitter):
 
         @root_kb.add('tab')
         def tab(_event):
+            """ Pressing TAB will change the focus between text_input and buffer_control_window. """
             if self.layout.has_focus(self.text_input):
                 self.layout.focus(self.buffer_control_window)
             else:
