@@ -24,16 +24,21 @@ class ClientUI(EventEmitter):
     def __init__(self):
         EventEmitter.__init__(self, events=["message_submit"])
         self.buffer_lock = asyncio.Lock()
-        self.message_buffer = Buffer(name="Messages")
+        self.message_buffer = Buffer(name="Messages", read_only=True)
+        self.buffer_control = BufferControl(buffer=self.message_buffer)
+        self.buffer_control_window = Window(
+            self.buffer_control,
+            wrap_lines=True
+        )
+        self.text_input = TextArea(dont_extend_height=True, scrollbar=True, multiline=False, accept_handler=lambda buf: self._on_buffer_submit(buf))
 
         root_container = HSplit([
-            Window(content=BufferControl(buffer=self.message_buffer, focusable=False), wrap_lines=True),
+            self.buffer_control_window,
             Window(height=1, char='-+'),
-            TextArea(dont_extend_height=True, scrollbar=True, multiline=False,
-                     accept_handler=lambda buf: self._on_buffer_submit(buf))
+            self.text_input
         ])
-
-        layout = Layout(root_container)
+        self.layout = Layout(root_container)
+        self.layout.focus(self.text_input)
 
         root_kb = KeyBindings()
 
@@ -42,7 +47,14 @@ class ClientUI(EventEmitter):
             """ Pressing Ctrl-C will exit the user interface."""
             self.exit()
 
-        self.app = Application(layout=layout, full_screen=True, key_bindings=root_kb)
+        @root_kb.add('tab')
+        def tab(_event):
+            if self.layout.has_focus(self.text_input):
+                self.layout.focus(self.buffer_control_window)
+            else:
+                self.layout.focus(self.text_input)
+
+        self.app = Application(layout=self.layout, full_screen=True, key_bindings=root_kb)
 
     @staticmethod
     async def alert(*args, **kwargs):
@@ -95,14 +107,21 @@ class ClientUI(EventEmitter):
           Stops the application UI.
         """
         if self.app.is_running:
-            self.app.exit(err)
+            self.app.exit(exception=err)
 
     async def display_text(self, text):
         """
           Display a new message in the textarea window
         """
         async with self.buffer_lock:
-            self.message_buffer.text += text + "\n"
+            # Scrolls back to the latest messages
+            self.message_buffer.cursor_position = len(self.message_buffer.text)
+
+            # https://github.com/prompt-toolkit/python-prompt-toolkit/issues/540
+            new_doc = self.message_buffer.document.insert_after(f"{text}\n")
+            self.message_buffer.set_document(new_doc, bypass_readonly=True)
+
+            self.buffer_control.move_cursor_down()
 
     def _on_buffer_submit(self, buf):
         """
