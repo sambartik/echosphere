@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
+from server.errors import UserNotLoggedIn
 from packet_handlers import get_packet_handler
 from shared.errors import ConnectionClosedError
 from shared.chat_protocol import ChatProtocol
@@ -17,9 +18,18 @@ class Connection:
         self.connection_time = datetime.now()
         self.last_heartbeat = None
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
+        """
+            Checks if the logged-in user is still connected to the server.
+
+            Raises:
+                UserNotLoggedIn: If the user is not logged in
+                ConnectionClosedError: If the connection is already closed
+        """
         if self.username is None:
-            raise Exception("The user has not yet logged in to the server.")
+            raise UserNotLoggedIn("The user has not yet logged in to the server.")
+        if not self.protocol.is_connected:
+            raise ConnectionClosedError("The connection to the user has already been closed!")
 
         if self.last_heartbeat:
             delta = datetime.now() - self.last_heartbeat
