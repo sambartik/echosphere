@@ -43,10 +43,11 @@ def packet_factory(buffer: bytes):
     """
     if len(buffer) >= Packet.HEADER_SIZE:
         packet_type, length = Packet.deserialize_header(buffer[:Packet.HEADER_SIZE])
-        payload = buffer[Packet.HEADER_SIZE:]
+        total_packet_size = Packet.HEADER_SIZE + length
+        payload = buffer[Packet.HEADER_SIZE:total_packet_size]
 
         if len(payload) >= length:
             packet_class = PACKET_CLASS_MAP.get(packet_type, Packet)
-            return packet_class.from_payload(payload), (Packet.HEADER_SIZE + length)
+            return packet_class.from_payload(payload), total_packet_size
 
     return None, None

@@ -1,10 +1,11 @@
 import asyncio
+import logging
 from collections import deque
 from typing import Optional
 from shared.errors import BaseProtocolError, ConnectionClosedError, NetworkError
 from shared.packets import Packet, ResponsePacket, packet_factory
 from shared.utils.event_emitter import EventEmitter
-
+logger = logging.getLogger(__name__)
 
 class ChatProtocol(asyncio.Protocol, EventEmitter):
     """
@@ -54,7 +55,7 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
             self.transport.close()
 
     def eof_received(self):
-        return False  #  Closes the connection
+        return False  # Closes the connection
 
     def connection_lost(self, err):
         self._closed_event.set()
@@ -111,12 +112,15 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
         if self.is_closed:
             raise ConnectionClosedError("Cant send packet, the connection is closed, sorry.")
 
-        future_response = asyncio.Future()
-        self._future_responses.append(future_response)
+        try:
+            future_response = asyncio.Future()
+            self._future_responses.append(future_response)
 
-        self.send_packet(packet)
+            self.send_packet(packet)
 
-        return await future_response
+            return await future_response
+        except Exception as e:
+            raise NetworkError("An error occurred while sending a packet and waiting for the response, sorry.") from e
 
     def _resolve_next_response(self, err: Optional[BaseException], result=None):
         """
