@@ -38,10 +38,13 @@ python client/main.py
 It is really simple just as starting the client and filling out few data required to make a connection the server.
 
 Immediately after the start a first screen pops up asking you for the username to be used during the session:
+
 ![img.png](username_screen.png)
+
 You can type the username straight away and when you are done, hit the enter key to confirm the username and to change the focus to the "OK" and "Cancel" buttons bellow the input field. Button currently in the focus will be highlighted in red colour. Hitting the enter key for the second time will submit the username, otherwise you can change the focus of the button to "Cancel" in order to exit the application.
 
 The username needs to be 3-12 characters long and can include ONLY alphanumerical characters. If the provided username is invalid, you wil be kindly informed by an error screen such as this:
+
 ![img_1.png](username_error_screen.png)
 
 In an exactly the same way you will be prompted for other information: the server host, port and the server password. These information should be provided by your server administrator.

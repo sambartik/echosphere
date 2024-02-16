@@ -43,6 +43,12 @@ class Connection:
 
 
 class ServerNetworking(EventEmitter):
+    """
+        This class emits following events:
+            - user_joined (protocol: ChatProtocol, username: str)
+            - user_left (protocol: ChatProtocol, username: str)
+            - message_received (protocol: ChatProtocol, username: str, message: str)
+    """
     def __init__(self):
         EventEmitter.__init__(self, events=["user_joined", "user_left", "message_received"])
         self.server = None

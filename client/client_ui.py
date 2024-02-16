@@ -107,7 +107,10 @@ class ClientUI(EventEmitter):
         """
           Stops the application UI.
         """
-        if self.app.is_running:
+        # Needed to check also for the internal future variable, because for some reason
+        # the is_running was not enough to exit the UI safely. Received an exception in some edge cases.
+        # More about their internal handling of exit: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/src/prompt_toolkit/application/application.py#L1292
+        if self.app.is_running and not self.app.future.done():
             self.app.exit(exception=err)
 
     async def display_text(self, text):

@@ -9,8 +9,8 @@ from shared.packets import Packet
 from shared.validators import valid_username, valid_message
 
 """
-    A helper mapping that helps to determine a class from a PacketType. Mainly helps the function packet_factory
-    to instantiate the correct class based on a raw packet header.
+    A helper mapping that helps to determine a class from a PacketType. Mainly helps the function get_packet_handler
+    to return an appropriate PacketHandler class
 """
 PACKET_HANDLER_MAP = {}
 
@@ -78,7 +78,7 @@ class MessagePacketHandler(PacketHandler):
             return protocol.send_packet(ResponsePacket(ResponseCode.INVALID_MESSAGE))
 
         protocol.send_packet(ResponsePacket(ResponseCode.OK))
-        return self.networking.emit("message_received", sender_username, packet.message)
+        return self.networking.emit("message_received", protocol, sender_username, packet.message)
 
 
 @register_packet_handler(PacketType.HEARTBEAT)
