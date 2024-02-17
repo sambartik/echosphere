@@ -1,4 +1,6 @@
+import os
 from abc import abstractmethod
+import random
 
 """
     A helper mapping that helps to determine a class from a command. Mainly helps the function get_command_handler
@@ -50,5 +52,26 @@ def get_command_handler(server, command: str) -> CommandHandler:
 @register_command_handler("list")
 class ListCommandHandler(CommandHandler):
     def handle_command(self, sender: str, message: str):
-        response_message = f"Connected users: {self.server.connected_users}"
+        response_message = f"Connected users: {', '.join(self.server.connected_users.keys())}"
+        self.server.send_message_to(None, sender, response_message)
+
+@register_command_handler("ping")
+class PingCommandHandler(CommandHandler):
+    def get_pong_message(self) -> str:
+        current_script_dir = os.path.dirname(os.path.abspath(__file__))
+        pong_messages_path = os.path.join(current_script_dir, "pong_messages.txt")
+        
+        # Choosing a random line, using Reservoir sampling, check out: https://en.wikipedia.org/wiki/Reservoir_sampling
+        # and/or the first 5 minutes of https://www.youtube.com/watch?v=Ybra0uGEkpM
+        random_message = ""
+        processed_lines = 0
+        with open(pong_messages_path, "r") as f:
+            for line in f:
+                processed_lines += 1
+                if random.randrange(processed_lines) == 0:
+                    random_message = line
+        return random_message.strip()
+    
+    def handle_command(self, sender: str, message: str):
+        response_message = self.get_pong_message()
         self.server.send_message_to(None, sender, response_message)
