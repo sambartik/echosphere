@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 
 # Add the parent directory of the current script to sys.path
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -104,10 +105,16 @@ class ServerApplication:
 
 async def main():
     try:
+        parser = argparse.ArgumentParser(description="An EchoSphere Chat Protocol server implementation.")
+        parser.add_argument("--port", type=int, help="The port number to liste on.", default=12300, required=False)
+        parser.add_argument("--password", type=str, help="The server password that the clients will be required to put in while logging in.", default=None, required=False)
+
+        args = parser.parse_args()
+        
         networking = ServerNetworking()
         app = ServerApplication(networking)
 
-        await app.start(12300, None)
+        await app.start(args.port, args.password)
     except asyncio.CancelledError:
         print("Main task was canceled")
     except BaseException as e:
