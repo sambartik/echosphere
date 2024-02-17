@@ -51,9 +51,11 @@ In an exactly the same way you will be prompted for other information: the serve
 
 ### Sending messages
 Once you successfully join the server, other clients will be notified by a system message and you will be greeted with an empty chat window, because previous conversations stay hidden to newcomers:
+
 ![img_2.png](empty_chat_window.png)
 
 You can start typing your message right away and submit it by hitting enter. The message must be at least 1 character long and at most 1000 characters long:
+
 ![img_3.png](message_chat_window.png)
 
 The server can reject a message based on its content policy, etc. In such case an error screen will be displayed.
