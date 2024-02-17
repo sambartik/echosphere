@@ -25,6 +25,9 @@ def register_command_handler(command: str):
 
 
 class CommandHandler:
+    """
+        This class needs to be subclassed to define packet handlers for different commands.
+    """
     def __init__(self, server):
         self.server = server
 

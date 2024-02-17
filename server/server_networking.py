@@ -64,6 +64,9 @@ class ServerNetworking(EventEmitter):
         return False
 
     def on_new_packet(self, protocol: ChatProtocol, packet: Packet):
+        """
+            An event listener that is triggered every time a server receives a new packet from client
+        """
         print("SERVER: New packet: ", packet)
 
         try:
@@ -77,10 +80,16 @@ class ServerNetworking(EventEmitter):
             protocol.close_connection()
 
     def on_new_connection(self, protocol: ChatProtocol):
+        """
+            An event listener that is triggered every time a connection is estabilished with the server
+        """
         self.connections[protocol] = Connection(protocol)
         print("SERVER: New connection!")
 
     def on_connection_close(self, protocol: ChatProtocol, err: Exception | None):
+        """
+            An event listener that is triggered every time a connection is closed or lost due to an error
+        """
         if self.connections[protocol].username:
             err = err or ConnectionClosedError("The connection was closed unexpectedly!")
             self.emit("user_left", protocol, self.connections[protocol].username, err)
