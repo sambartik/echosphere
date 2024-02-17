@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from prompt_toolkit import Application
-from prompt_toolkit.shortcuts import input_dialog, message_dialog
+from prompt_toolkit.shortcuts import input_dialog, message_dialog, set_title
 from prompt_toolkit.application import in_terminal
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.layout.containers import HSplit, Window
@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 class ClientUI(EventEmitter):
     """
-      This class emits following events:
-        - message_submit (message: str): Emitted, when a message was submitted from the UI.
+        This class emits following events:
+            - message_submit (message: str): Emitted, when a message was submitted from the UI.
     """
 
-    def __init__(self):
+    def __init__(self, title: str):
         EventEmitter.__init__(self, events=["message_submit"])
+        self.title = title
         self.buffer_lock = asyncio.Lock()
         self.message_buffer = Buffer(name="Messages", read_only=True)
         self.buffer_control = BufferControl(buffer=self.message_buffer)
@@ -57,24 +58,20 @@ class ClientUI(EventEmitter):
 
         self.app = Application(layout=self.layout, full_screen=True, key_bindings=root_kb)
 
-    @staticmethod
-    async def alert(*args, **kwargs):
+    async def alert(self, text: str):
+        """
+            Shows a message box with a text.
+        """
         async with in_terminal():
-            dialog_frontapp = message_dialog(*args, **kwargs)
+            dialog_frontapp = message_dialog(title=self.title, text=text)
             await dialog_frontapp.run_async()
 
-    @staticmethod
-    async def ask_for(*args, **kwargs):
+    async def ask_for(self, text: str, default: str = ""):
         """
-          Shows an input dialog and returns the result.
+            Shows an input dialog and returns the result.
 
-          KWArgs:
-            title (str): Title of the dialog
-            text (str): Text displayed
-            default (str): Pre-filled value
-
-          Raises:
-            KeyboardInterrupt: If user wishes to close the app via ctrl + c signal.
+            Raises:
+                KeyboardInterrupt: If user wishes to close the app via ctrl + c signal.
         """
         async with in_terminal():
             kb = KeyBindings()
@@ -83,7 +80,7 @@ class ClientUI(EventEmitter):
             def exit_(event):
                 event.app.exit()
 
-            dialog_frontapp = input_dialog(*args, **kwargs)
+            dialog_frontapp = input_dialog(title=self.title, text=text, default=default)
             dialog_frontapp.key_bindings = kb
             response = await dialog_frontapp.run_async()
 
@@ -94,7 +91,7 @@ class ClientUI(EventEmitter):
 
     async def draw(self):
         """
-          Starts a rendering loop of the application UI. Blocks until the UI is exited.
+            Starts a rendering loop of the application UI. Blocks until the UI is exited.
         """
         try:
             await self.app.run_async()
@@ -105,7 +102,7 @@ class ClientUI(EventEmitter):
 
     def exit(self, err=None):
         """
-          Stops the application UI.
+            Stops the application UI.
         """
         # Needed to check also for the internal future variable, because for some reason
         # the is_running was not enough to exit the UI safely. Received an exception in some edge cases.
@@ -115,7 +112,7 @@ class ClientUI(EventEmitter):
 
     async def display_text(self, text):
         """
-          Display a new message in the textarea window
+            Display a new message in the textarea window
         """
         async with self.buffer_lock:
             # Scrolls back to the latest messages
@@ -129,7 +126,7 @@ class ClientUI(EventEmitter):
 
     def _on_buffer_submit(self, buf):
         """
-          An internal helper method to process new message submits
+            An internal helper method to process new message submits
         """
         if buf.text.strip() == "":
             return

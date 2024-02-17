@@ -56,17 +56,14 @@ class ClientApplication:
           Returns:
             A tuple: (username, host, port, server_password)
         """
-        title = "ChatClient"
-        username = await self.ui.ask_for(title, text="Enter your username: ")
+        username = await self.ui.ask_for("Enter your username: ")
         while not valid_username(username):
-            await self.ui.alert(title,
-                                text="Your username is invalid, it needs to be alphanumeric and 3 - 12 characters long.")
-            username = await self.ui.ask_for(title, text="Enter your username: ")
+            await self.ui.alert("Your username is invalid, it needs to be alphanumeric and 3 - 12 characters long.")
+            username = await self.ui.ask_for("Enter your username: ")
         self.username = username
-        host = await self.ui.ask_for(title, text="Enter server host: ", default="localhost")
-        port = await self.ui.ask_for(title, text="Enter server port: ", default="12300")
-        server_password = await self.ui.ask_for(title, text="Enter the server's password (leave empty for none): ",
-                                                default="")
+        host = await self.ui.ask_for("Enter server host: ", default="localhost")
+        port = await self.ui.ask_for("Enter server port: ", default="12300")
+        server_password = await self.ui.ask_for("Enter the server's password (leave empty for none): ", default="")
 
         return username, host, port, server_password
 
@@ -81,7 +78,7 @@ class ClientApplication:
         self.networking.disconnect()
         self.ui.exit()
         if err:
-            await self.ui.alert(title="ChatClient", text=f"Well, something bad happened :(.\nError: {err}")
+            await self.ui.alert(f"Well, something bad happened :(.\nError: {err}")
 
     async def display_message(self, username: str | None, message: str):
         """
@@ -108,12 +105,12 @@ class ClientApplication:
         except NetworkError as err:
             await self.stop(err)
         except MessageError as err:
-            await self.ui.alert(title="ChatClient", text=f"The message was rejected by the server, sorry.")
+            await self.ui.alert(f"The message was rejected by the server, sorry.")
 
 
 async def main():
     try:
-        ui = ClientUI()
+        ui = ClientUI("ChatClient")
         networking = ClientNetworking()
         app = ClientApplication(ui, networking)
         await app.run()
