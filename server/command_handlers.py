@@ -44,7 +44,7 @@ def get_command_handler(server, command: str) -> CommandHandler:
 
         return handler
     except KeyError:
-        raise KeyError(f"Invalid command: {command}")
+        raise ValueError(f"Invalid command: {command}")
 
 
 @register_command_handler("list")
