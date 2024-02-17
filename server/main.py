@@ -39,8 +39,11 @@ class ServerApplication:
             parsed_command = message.split(" ")
             command = parsed_command[0][1:]
 
-            command_handler = get_command_handler(self, command)
-            command_handler.handle_command(sender, message)
+            try:
+                command_handler = get_command_handler(self, command)
+                command_handler.handle_command(sender, message)
+            except ValueError as e:
+                self.send_message_to(None, sender, "Invalid command!")
         else:
             self.broadcast_message(sender, message)
 
@@ -89,7 +92,7 @@ async def main():
         networking = ServerNetworking()
         app = ServerApplication(networking)
 
-        await app.start(12300, "my_password")
+        await app.start(12300, None)
     except asyncio.CancelledError:
         print("Main task was canceled")
     except BaseException as e:

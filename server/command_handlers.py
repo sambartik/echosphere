@@ -43,8 +43,8 @@ def get_command_handler(server, command: str) -> CommandHandler:
         handler = handler_class(server)
 
         return handler
-    except ValueError:
-        raise ValueError(f"No handler for packet type: {command}")
+    except KeyError:
+        raise KeyError(f"Invalid command: {command}")
 
 
 @register_command_handler("list")

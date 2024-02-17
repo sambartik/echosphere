@@ -50,7 +50,7 @@ def get_packet_handler(networking, packet: Packet) -> PacketHandler:
         handler = handler_class(networking)
 
         return handler
-    except ValueError:
+    except KeyError:
         raise ValueError(f"No handler for packet type: {packet.PACKET_TYPE}")
 
 
