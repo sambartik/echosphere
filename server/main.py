@@ -75,10 +75,8 @@ class ServerApplication:
                 message: The message to send
         """
         print(f"Sending direct message from {sender} to {recipient}")
-        for username, protocol in self.connected_users.items():
-            if recipient == username:
-                protocol.send_packet(MessagePacket(sender, message))
-                break
+        protocol = self.connected_users[recipient]
+        protocol.send_packet(MessagePacket(sender, message))
 
     async def start(self, port: int, server_password: str | None):
         try:
