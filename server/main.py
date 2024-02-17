@@ -23,10 +23,18 @@ class ServerApplication:
         networking.on("message_received", self.on_message_received)
 
     def on_user_joined(self, protocol: ChatProtocol, username: str):
+        """
+            An event listener that gets triggered every time a user estabilishes a connection with the server
+            AND successfully logs in.
+        """
         self.broadcast_message(None, f"User {username} has joined!")
         self.connected_users[username] = protocol
 
     def on_user_left(self, _protocol: ChatProtocol, username: str, err: Exception | None):
+        """
+            An event listener that gets triggered every time a user gets disconnected from the server,
+            either because of an error, indicated by the err parameter or a regular logout.
+        """
         del self.connected_users[username]
         if not err:
             self.broadcast_message(None, f"User {username} has left!")
@@ -34,14 +42,19 @@ class ServerApplication:
             self.broadcast_message(None, f"User {username} has lost the connection to the server!")
 
     def on_message_received(self, _protocol: ChatProtocol, sender: str, message: str):
+        """
+            An event listener that gets triggered every time any user sends a new message.
+        """
         if message.startswith("/"):
-            print("Received a command!")
-            parsed_command = message.split(" ")
+            parsed_command = message.strip().split(" ")
             command = parsed_command[0][1:]
-
+            args = parsed_command[1:]
+            
+            print(f"Received a command {command}!")
+            
             try:
                 command_handler = get_command_handler(self, command)
-                command_handler.handle_command(sender, message)
+                command_handler.handle_command(sender, args)
             except ValueError as e:
                 self.send_message_to(None, sender, "Invalid command!")
         else:
@@ -79,6 +92,10 @@ class ServerApplication:
         protocol.send_packet(MessagePacket(sender, message))
 
     async def start(self, port: int, server_password: str | None):
+        """
+            Starts the server to listen on localhost on specified port. The server will be protected by
+            the password passed in the server_password argument. Pass None for no password.
+        """
         try:
             await self.networking.serve("localhost", port, server_password)
         except Exception as e:

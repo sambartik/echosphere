@@ -29,7 +29,7 @@ class CommandHandler:
         self.server = server
 
     @abstractmethod
-    def handle_command(self, sender: str, message: str):
+    def handle_command(self, sender: str, args: list[str]):
         pass
 
 
@@ -51,7 +51,7 @@ def get_command_handler(server, command: str) -> CommandHandler:
 
 @register_command_handler("list")
 class ListCommandHandler(CommandHandler):
-    def handle_command(self, sender: str, message: str):
+    def handle_command(self, sender: str, args: list[str]):
         response_message = f"Connected users: {', '.join(self.server.connected_users.keys())}"
         self.server.send_message_to(None, sender, response_message)
 
@@ -72,6 +72,6 @@ class PingCommandHandler(CommandHandler):
                     random_message = line
         return random_message.strip()
     
-    def handle_command(self, sender: str, message: str):
+    def handle_command(self, sender: str, args: list[str]):
         response_message = self.get_pong_message()
         self.server.send_message_to(None, sender, response_message)
