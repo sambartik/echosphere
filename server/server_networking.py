@@ -1,12 +1,15 @@
 import asyncio
+import logging
 from datetime import datetime, timedelta
 
-from server.errors import UserNotLoggedIn
+from server.errors import UserNotLoggedIn, ServerAlreadyRunning
 from packet_handlers import get_packet_handler
 from shared.errors import ConnectionClosedError
 from shared.chat_protocol import ChatProtocol
 from shared.utils.event_emitter import EventEmitter
 from shared.packets.definitions import *
+
+logger = logging.getLogger(__name__)
 
 
 class Connection:
@@ -49,6 +52,7 @@ class ServerNetworking(EventEmitter):
             - user_left (protocol: ChatProtocol, username: str)
             - message_received (protocol: ChatProtocol, username: str, message: str)
     """
+
     def __init__(self):
         EventEmitter.__init__(self, events=["user_joined", "user_left", "message_received"])
         self.server = None
@@ -67,24 +71,26 @@ class ServerNetworking(EventEmitter):
         """
             An event listener that is triggered every time a server receives a new packet from client
         """
-        print("SERVER: New packet: ", packet)
+        logger.debug(f"New packet received: {packet}")
 
         try:
             handler = get_packet_handler(self, packet)
+            logger.debug(f"Handling the new packet with {handler}")
             handler.handle_packet(protocol, packet)
         except ValueError:
-            print("SERVER: Unknown packet received, closing the connection.")
+            logger.error("Unknown packet received, closing the connection.")
             protocol.close_connection()
         except Exception as e:
-            print("An unexpected error occurred while handling packet: ", e)
+            logger.error(f"An unexpected error occurred while handling packet: {e}")
             protocol.close_connection()
 
     def on_new_connection(self, protocol: ChatProtocol):
         """
-            An event listener that is triggered every time a connection is estabilished with the server
+            An event listener that is triggered every time a connection is established with the server
         """
         self.connections[protocol] = Connection(protocol)
-        print("SERVER: New connection!")
+        client_ip, client_port, _, _ = protocol.transport.get_extra_info('peername')
+        logger.info(f"New connection established from {client_ip}:{client_port}!")
 
     def on_connection_close(self, protocol: ChatProtocol, err: Exception | None):
         """
@@ -94,9 +100,11 @@ class ServerNetworking(EventEmitter):
             err = err or ConnectionClosedError("The connection was closed unexpectedly!")
             self.emit("user_left", protocol, self.connections[protocol].username, err)
         del self.connections[protocol]
-        print(f"SERVER: Connection closed (err: {err})")
+        client_ip, client_port, _, _ = protocol.transport.get_extra_info('peername')
+        logger.info(f"Connection closed {client_ip}:{client_port} (err: {err})")
 
     def accept_connection(self) -> ChatProtocol:
+        """ Returns an instance of the ChatProtocol class for the new connection """
         protocol = ChatProtocol()
         protocol.on("connection_made", self.on_new_connection)
         protocol.on("packet_received", self.on_new_packet)
@@ -106,10 +114,11 @@ class ServerNetworking(EventEmitter):
     async def monitor_heartbeats(self, interval: int = 15):
         """ Periodically checks the heartbeats of all the connected users and finds the dead ones among them. """
         try:
+            logger.debug(f"Starting heartbeat checking, every {interval} seconds...")
             while True:
                 for connection in self.connections.values():
                     if connection.username and not connection.is_alive():
-                        print(f"SERVER: The connection of user {connection.username} is dead, cleaning up...")
+                        logger.warning(f"The connection of user {connection.username} is dead, cleaning up...")
                         self.emit("user_left", connection.protocol, connection.username,
                                   ConnectionClosedError("The connection to the client was lost!"))
                         connection.username = None
@@ -121,16 +130,16 @@ class ServerNetworking(EventEmitter):
     async def serve(self, host: str, port: int, server_password: str | None):
         """ Starts the server and listens for incoming connections. """
         if self.server:
-            raise Exception("Server is already running!")
+            raise ServerAlreadyRunning("Server is already running!")
 
         try:
             self.server_password = server_password
             self.server = await asyncio.get_event_loop().create_server(self.accept_connection, host, port)
-            print(f"Server started listening on {host}:{port}.")
+            logger.info(f"Server started listening on {host}:{port}")
             self.heartbeat_monitor_task = asyncio.create_task(self.monitor_heartbeats())
             await self.server.serve_forever()
         except Exception as e:
-            print(f"An error occurred while serving: {e}")
+            logger.error(f"An error occurred while serving: {e}")
         finally:
             self.stop_server()
 

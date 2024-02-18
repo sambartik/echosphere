@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import argparse
@@ -14,6 +15,7 @@ from shared.packets.definitions import *
 from server.server_networking import ServerNetworking
 from server.command_handlers import get_command_handler
 
+
 class ServerApplication:
     def __init__(self, networking: ServerNetworking):
         self.networking = networking
@@ -25,9 +27,10 @@ class ServerApplication:
 
     def on_user_joined(self, protocol: ChatProtocol, username: str):
         """
-            An event listener that gets triggered every time a user estabilishes a connection with the server
+            An event listener that gets triggered every time a user establishes a connection with the server
             AND successfully logs in.
         """
+        logger.info(f"User joined: {username}")
         self.broadcast_message(None, f"User {username} has joined!")
         self.connected_users[username] = protocol
 
@@ -38,8 +41,10 @@ class ServerApplication:
         """
         del self.connected_users[username]
         if not err:
+            logger.info("User {username} left the chat!")
             self.broadcast_message(None, f"User {username} has left!")
         else:
+            logger.info("User {username} left the chat due to an error!")
             self.broadcast_message(None, f"User {username} has lost the connection to the server!")
 
     def on_message_received(self, _protocol: ChatProtocol, sender: str, message: str):
@@ -50,11 +55,12 @@ class ServerApplication:
             parsed_command = message.strip().split(" ")
             command = parsed_command[0][1:]
             args = parsed_command[1:]
-            
-            print(f"Received a command {command}!")
-            
+
+            logger.info(f"Received a command {command}!")
+
             try:
                 command_handler = get_command_handler(self, command)
+                logger.debug(f"Handling the new packet with {command_handler}")
                 command_handler.handle_command(sender, args)
             except ValueError as e:
                 self.send_message_to(None, sender, "Invalid command!")
@@ -71,7 +77,7 @@ class ServerApplication:
                 sender: The sender of the message, None in case of a system message.
                 message: The message to broadcast
         """
-        print(f"Broadcasting a message from {sender}")
+        logger.info(f"Broadcasting a message from {sender}")
         for username, protocol in self.connected_users.items():
             if sender is not None and sender == username:
                 continue
@@ -88,7 +94,7 @@ class ServerApplication:
                 recipient: The username of recipient of the message.
                 message: The message to send
         """
-        print(f"Sending direct message from {sender} to {recipient}")
+        logger.info(f"Sending direct message from {sender} to {recipient}")
         protocol = self.connected_users[recipient]
         protocol.send_packet(MessagePacket(sender, message))
 
@@ -100,28 +106,48 @@ class ServerApplication:
         try:
             await self.networking.serve("localhost", port, server_password)
         except Exception as e:
-            print(f"An error occurred in start: {e}")
+            logger.error(f"An error occurred in start: {e}")
+
+
+def configure_server_logging():
+    log_level_map = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+    log_level = log_level_map.get(os.getenv('LOG_LEVEL'), logging.INFO)
+
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    date_format = "%d-%m-%Y %H:%M:%S"
+
+    logging.basicConfig(level=log_level, format=log_format, datefmt=date_format, handlers=[logging.StreamHandler()])
 
 
 async def main():
     try:
         parser = argparse.ArgumentParser(description="An EchoSphere Chat Protocol server implementation.")
-        parser.add_argument("--port", type=int, help="The port number to liste on.", default=12300, required=False)
-        parser.add_argument("--password", type=str, help="The server password that the clients will be required to put in while logging in.", default=None, required=False)
+        parser.add_argument("--port", type=int, help="The port number to listen on.", default=12300, required=False)
+        parser.add_argument("--password", type=str,
+                            help="The server password that the clients will be required to put in while logging in.",
+                            default=None, required=False)
 
         args = parser.parse_args()
-        
+
         networking = ServerNetworking()
         app = ServerApplication(networking)
 
         await app.start(args.port, args.password)
     except asyncio.CancelledError:
-        print("Main task was canceled")
+        logger.debug("Main task was canceled")
     except BaseException as e:
-        print("Base exception in main ", e)
+        logger.error(f"Base exception in main {e}")
 
-    print("Goodbye.")
+    logging.info("Goodbye.")
 
 
 if __name__ == '__main__':
+    configure_server_logging()
+    logger = logging.getLogger(__name__)
     asyncio.run(main())

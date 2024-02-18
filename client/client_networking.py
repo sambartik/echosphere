@@ -27,17 +27,18 @@ class ClientNetworking(EventEmitter):
         self.username = None
 
     def on_new_packet(self, _, packet):
-        logger.debug(f"Received a new packet: {packet}")
+        logger.debug(f"Received a new packet from the server: {packet}")
         if isinstance(packet, MessagePacket):
             self.emit("message_received", packet.username, packet.message)
 
     def on_connection_lost(self, _, err: Exception | None):
-        if err:
-            logger.error(f"Connection lost because an error occurred: {err}")
-        else:
-            logger.debug(f"Connection lost")
         # In case we did not call disconnect beforehand, the connection drop was unexpected.
         if self.connection:
+            if err:
+                logger.error(f"Connection lost because an error occurred: {err}")
+            else:
+                logger.error(f"Connection lost unexpectedly.")
+
             self.emit("connection_lost",
                       err or ConnectionClosedError("The connection was closed by the server unexpectedly."))
             self.disconnect()
@@ -87,7 +88,8 @@ class ClientNetworking(EventEmitter):
             raise Exception("Already connected to a server.")
 
         try:
-            logger.info(f"Joining a server {host}:{port} with the username {username}")
+            logger.info(f"Joining a server {host}:{port} with the username {username}.")
+            logger.debug("Initializing connection with the server...")
             self.connection = await asyncio.get_running_loop().create_connection(lambda: ChatProtocol(), host, port)
 
             # Set up event listeners
@@ -118,10 +120,10 @@ class ClientNetworking(EventEmitter):
 
         if not self.connection or self.connection[1].is_closed:
             raise ConnectionClosedError("Not connected to a server.")
-
+        logger.info(f"Logging in as {username}")
         logger.debug("Sending a login packet to the server")
         response = await self.connection[1].send_packet_and_wait(LoginPacket(username, server_password))
-        logger.debug(f"Received a response: {response}")
+        logger.debug(f"Received a response to login: {response}")
         if response.response_code == ResponseCode.INVALID_USERNAME:
             raise InvalidUsernameError("The username is invalid, try a different one, sorry!")
         elif response.response_code == ResponseCode.TAKEN_USERNAME:
@@ -148,7 +150,7 @@ class ClientNetworking(EventEmitter):
 
         logger.debug("Sending a message packet...")
         response = await self.connection[1].send_packet_and_wait(MessagePacket(self.username, message))
-        logger.debug(f"Received a response: {response}")
+        logger.debug(f"Received a response to message: {response}")
         if response.response_code != ResponseCode.OK:
             raise MessageError(f'The message was rejected by the server: "{message}"')
 
@@ -169,7 +171,7 @@ class ClientNetworking(EventEmitter):
                 self.connection[1].send_packet(heartbeat_packet)
                 await asyncio.sleep(interval)
         except asyncio.CancelledError:
-            logger.debug("Heartbeat task cancelled.")
+            logger.debug("Periodic heartbeat task cancelled.")
             self.heartbeat_task = None
         except NetworkError as err:
             logger.error(f"An error occurred while sending a heartbeat: {err}")

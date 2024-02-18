@@ -9,8 +9,8 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 
-from shared.utils.logging_setup import configure_logging
-from shared.validators import valid_username
+from shared.utils.logging_config import get_logging_config
+from shared.validators import valid_username, valid_message
 from shared.errors import NetworkError
 
 from client.errors import ApplicationError, MessageError
@@ -25,24 +25,42 @@ class ClientApplication:
         self.username = None
 
         # Register event listeners
-        self.ui.on("message_submit", lambda message: asyncio.create_task(self.broadcast_message(message)))
-        self.networking.on("message_received",
-                           lambda username, message: asyncio.create_task(self.display_message(username, message)))
-        self.networking.on("connection_lost", lambda err: asyncio.create_task(self.stop(err)))
+        self.ui.on("message_submit", self.on_message_submit)
+        self.networking.on("message_received", self.on_message_received)
+        self.networking.on("connection_lost", self.on_connection_lost)
+
+    def on_message_submit(self, message: str):
+        if valid_message(message):
+            logging.debug(f"User submitted a valid message.")
+            asyncio.create_task(self.broadcast_message(message))
+        else:
+            logging.warning(f"User submitted an invalid message.")
+            self.ui.alert("The message you were trying to send is invalid.")
+
+    def on_message_received(self, username: str | None, message: str):
+        if username is not None:
+            logger.info(f"Received message from a user {username}.")
+        else:
+            logger.info(f"Received a system message!")
+        asyncio.create_task(self.display_message(username, message))
+
+    def on_connection_lost(self, err):
+        logger.warning(f"Connection lost: {err}")
+        asyncio.create_task(self.stop(err))
 
     async def run(self):
         """ Starts the application and blocks until it exits. """
         try:
+            logger.info(f"Starting the client application...")
             username, host, port, server_password = await self._config_prompt()
             await self.networking.join_server(host, int(port), username, server_password)
             await self.ui.draw()
-            logger.info("Reached the end of run method.")
             await self.stop()
         except (asyncio.CancelledError, KeyboardInterrupt):
-            logger.info("Cancelling app")
+            logger.debug("The application was canceled.")
             await self.stop()
         except Exception as e:
-            logger.error(f"Base exception in the run function: {type(e)}, {e}")
+            logger.error(f"Base exception caught in the run function: {type(e)}, {e}")
             logger.error(traceback.format_exc())
             await self.stop(e)
 
@@ -74,7 +92,10 @@ class ClientApplication:
           Parameters:
             err: An error that triggered the stop call.
         """
-        logger.info(f"Stopping the application. (err: {err})")
+        if err:
+            logger.info(f"Stopping the application due to an error: {err}")
+        else:
+            logger.info(f"Stopping the application gracefully.")
         self.networking.disconnect()
         self.ui.exit()
         if err:
@@ -98,15 +119,39 @@ class ClientApplication:
         """
           Receives the message from the UI and broadcasts it to other connected users.
         """
-        logger.debug(f"Broadcasting a message: ({message})")
         try:
+            logger.debug(f"Sending a message to the server: ({message})")
             await self.networking.send_message(message)
             await self.display_message(self.username, message)
         except NetworkError as err:
+            logger.error(f"A network error occurred while sending a message to the server")
+            logger.error(traceback.format_exc())
             await self.stop(err)
-        except MessageError as err:
+        except MessageError:
+            logger.info("Message was rejected by the server.")
             await self.ui.alert(f"The message was rejected by the server, sorry.")
 
+
+def configure_client_logging():
+    log_level_map = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+    log_level = log_level_map.get(os.getenv('LOG_LEVEL'), logging.INFO)
+    log_enabled = os.getenv('LOG_ENABLED', False)
+    log_filepath = os.getenv("LOG_FILEPATH", "client.log")
+
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    date_format = "%d-%m-%Y %H:%M:%S"
+
+    if log_enabled:
+        logging.basicConfig(level=log_level, format=log_format, datefmt=date_format,
+                            handlers=[logging.FileHandler(log_filepath, encoding="utf-8", mode="a")])
+    else:
+        logging.disable()
 
 async def main():
     try:
@@ -115,12 +160,13 @@ async def main():
         app = ClientApplication(ui, networking)
         await app.run()
     except (asyncio.CancelledError, KeyboardInterrupt):
-        logger.info("Main canceled")
+        logger.debug("Main canceled")
     except ApplicationError as e:
-        logger.info("Caught exception at the end: ", type(e), e)
+        logger.error("Caught exception in the main function: ", type(e), e)
+        logger.error(traceback.format_exc())
 
 
 if __name__ == '__main__':
-    configure_logging("client.log")
+    configure_client_logging()
     logger = logging.getLogger(__name__)
     asyncio.run(main())

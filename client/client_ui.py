@@ -33,6 +33,7 @@ class ClientUI(EventEmitter):
         )
         self.text_input = TextArea(dont_extend_height=True, scrollbar=True, multiline=False, accept_handler=lambda buf: self._on_buffer_submit(buf))
 
+        # Here, we define the whole layout of the main chat window:
         root_container = HSplit([
             self.buffer_control_window,
             Window(height=1, char='-+'),
@@ -46,6 +47,7 @@ class ClientUI(EventEmitter):
         @root_kb.add('c-c')
         def exit_(_event):
             """ Pressing Ctrl-C will exit the user interface."""
+            logger.info("UI requested to be exited by the user.")
             self.exit()
 
         @root_kb.add('tab')
@@ -85,6 +87,7 @@ class ClientUI(EventEmitter):
             response = await dialog_frontapp.run_async()
 
             if response is None:
+                logger.info("Input dialog exited by the user.")
                 raise KeyboardInterrupt
 
             return response
@@ -94,9 +97,10 @@ class ClientUI(EventEmitter):
             Starts a rendering loop of the application UI. Blocks until the UI is exited.
         """
         try:
+            logger.info("Starting rendering loop...")
             await self.app.run_async()
         except asyncio.CancelledError:
-            logger.debug("ClientUI canceled")
+            logger.debug("ClientUI draw task was canceled")
         finally:
             self.exit()
 
@@ -108,12 +112,17 @@ class ClientUI(EventEmitter):
         # the is_running was not enough to exit the UI safely. Received an exception in some edge cases.
         # More about their internal handling of exit: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/src/prompt_toolkit/application/application.py#L1292
         if self.app.is_running and not self.app.future.done():
+            if err:
+                logger.error(f"Stopping the application UI due to an error: {err}")
+            else:
+                logger.debug(f"Stopping the application UI gracefully.")
             self.app.exit(exception=err)
 
     async def display_text(self, text):
         """
             Display a new message in the textarea window
         """
+        logger.debug(f'Displaying the text in the chat window.')
         async with self.buffer_lock:
             # Scrolls back to the latest messages
             self.message_buffer.cursor_position = len(self.message_buffer.text)
@@ -130,4 +139,6 @@ class ClientUI(EventEmitter):
         """
         if buf.text.strip() == "":
             return
+
+        logger.debug(f'Submitting a message.')
         self.emit("message_submit", buf.text)

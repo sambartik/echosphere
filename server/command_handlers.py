@@ -28,6 +28,7 @@ class CommandHandler:
     """
         This class needs to be subclassed to define packet handlers for different commands.
     """
+
     def __init__(self, server):
         self.server = server
 
@@ -58,12 +59,14 @@ class ListCommandHandler(CommandHandler):
         response_message = f"Connected users: {', '.join(self.server.connected_users.keys())}"
         self.server.send_message_to(None, sender, response_message)
 
+
 @register_command_handler("ping")
 class PingCommandHandler(CommandHandler):
-    def get_pong_message(self) -> str:
+    @staticmethod
+    def get_pong_message() -> str:
         current_script_dir = os.path.dirname(os.path.abspath(__file__))
         pong_messages_path = os.path.join(current_script_dir, "pong_messages.txt")
-        
+
         # Choosing a random line, using Reservoir sampling, check out: https://en.wikipedia.org/wiki/Reservoir_sampling
         # and/or the first 5 minutes of https://www.youtube.com/watch?v=Ybra0uGEkpM
         random_message = ""
@@ -74,7 +77,7 @@ class PingCommandHandler(CommandHandler):
                 if random.randrange(processed_lines) == 0:
                     random_message = line
         return random_message.strip()
-    
+
     def handle_command(self, sender: str, args: list[str]):
         response_message = self.get_pong_message()
         self.server.send_message_to(None, sender, response_message)
