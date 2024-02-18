@@ -135,7 +135,7 @@ class ClientNetworking(EventEmitter):
 
     async def send_message(self, message: str):
         """
-          Sends the message to the server to be broadcaster to everyone else.
+          Sends the message to the server to be broadcast to everyone else.
 
           Raises:
             ConnectionClosedError: If there is no active connection with a server
