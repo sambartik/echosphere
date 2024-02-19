@@ -11,10 +11,10 @@ COMMAND_HANDLER_MAP = {}
 
 def register_command_handler(command: str):
     """
-        Use this decorator when defining a new CommandHandler class type.
+    Use this decorator when defining a new CommandHandler class type.
 
-        Internally, this dynamically sets a command as a key in COMMAND_HANDLER_MAP map to value of a respective
-        command handler class
+    Internally, this dynamically sets a command as a key in COMMAND_HANDLER_MAP map to value of a respective
+    command handler class
     """
 
     def decorator(cls):
@@ -26,7 +26,9 @@ def register_command_handler(command: str):
 
 class CommandHandler:
     """
-        This class needs to be subclassed to define packet handlers for different commands.
+    This class needs to be subclassed to define handlers for different commands. These handler classes need to be
+    registered with @register_command_handler class decorator. The only method that needs to be implemented by
+    subclasses is handle_command method.
     """
 
     def __init__(self, server):
@@ -34,15 +36,27 @@ class CommandHandler:
 
     @abstractmethod
     def handle_command(self, sender: str, args: list[str]):
+        """
+        This method is called to handle the command sent by the user.
+
+        Parameters:
+            sender: The sender of the command
+            args: The list of arguments that followed after the command, i.e. for message:
+                  /command [arg1] [arg2] [arg3] ... [argN] the args list would have been [arg1, arg2, ..., argN]
+        """
         pass
 
 
 def get_command_handler(server, command: str) -> CommandHandler:
     """
-        Returns a PacketHandler for the given packet.
+    Returns a CommandHandler instance for the given command.
 
-        Raises:
-            ValueError: If there is no packet handler registered for the given packet
+    Parameters:
+        server: The instance of ServrApplication class
+        command: The command to be handled
+
+    Raises:
+        ValueError: If there is no packet handler registered for the given command
     """
     try:
         handler_class = COMMAND_HANDLER_MAP[command]
@@ -55,6 +69,7 @@ def get_command_handler(server, command: str) -> CommandHandler:
 
 @register_command_handler("list")
 class ListCommandHandler(CommandHandler):
+    """ Lists the currently logged-in users """
     def handle_command(self, sender: str, args: list[str]):
         response_message = f"Connected users: {', '.join(self.server.connected_users.keys())}"
         self.server.send_message_to(None, sender, response_message)
@@ -62,8 +77,10 @@ class ListCommandHandler(CommandHandler):
 
 @register_command_handler("ping")
 class PingCommandHandler(CommandHandler):
+    """ Pings the server, and it pongs back, in a rather funny way. """
     @staticmethod
     def get_pong_message() -> str:
+        """ Returns a random pong message """
         current_script_dir = os.path.dirname(os.path.abspath(__file__))
         pong_messages_path = os.path.join(current_script_dir, "pong_messages.txt")
 

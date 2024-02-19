@@ -60,6 +60,12 @@ You can start typing your message right away and submit it by hitting enter. The
 
 The server can reject a message based on its content policy, etc. In such case an error screen will be displayed.
 
+### Scrolling through the history
+Right after logging in, the focus will be on the text input field, indicated by a white rectangle - the cursor - in the bottom left corner. This means that you can start typing your message and eventually submit it to the server by clicking the ENTER key on the keyboard. The arrow keys up and down on the keyboard serve a special function: they "scrolls" through the message history you have sent. Clicking arrow up will bring old messages into the text field, giving you the possibility to edit it and send it again. The same applies with the arrow down, just the other way round.
+
+You don't have to interact only with the input field. By tapping TAB key, you can toggle the focus to the messages window and view old messages that were sent on the server. It is also done in a similar fashion, using arrow keys in a similar fashion as in previous example to move the cursor up and down.
+
+
 ### Commands
 Commands are sent by sending a special messages starting with `/`. For now, the server supports only following commands:
 - `/list`

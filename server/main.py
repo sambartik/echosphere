@@ -17,6 +17,11 @@ from server.command_handlers import get_command_handler
 
 
 class ServerApplication:
+    """
+    Essentially implements the server application logic. It is responsible for handling messages sent to the server and
+    notifies everyone when a user joins or leaves.
+    """
+
     def __init__(self, networking: ServerNetworking):
         self.networking = networking
         self.connected_users = {}
@@ -27,8 +32,8 @@ class ServerApplication:
 
     def on_user_joined(self, protocol: ChatProtocol, username: str):
         """
-            An event listener that gets triggered every time a user establishes a connection with the server
-            AND successfully logs in.
+        An event listener that gets triggered every time a user establishes a connection with the server
+        AND successfully logs in.
         """
         logger.info(f"User joined: {username}")
         self.broadcast_message(None, f"User {username} has joined!")
@@ -36,8 +41,8 @@ class ServerApplication:
 
     def on_user_left(self, _protocol: ChatProtocol, username: str, err: Exception | None):
         """
-            An event listener that gets triggered every time a user gets disconnected from the server,
-            either because of an error, indicated by the err parameter or a regular logout.
+        An event listener that gets triggered every time a user gets disconnected from the server,
+        either because of an error, indicated by the err parameter or a regular logout.
         """
         del self.connected_users[username]
         if not err:
@@ -49,7 +54,7 @@ class ServerApplication:
 
     def on_message_received(self, _protocol: ChatProtocol, sender: str, message: str):
         """
-            An event listener that gets triggered every time any user sends a new message.
+        An event listener that gets triggered every time any user sends a new message.
         """
         if message.startswith("/"):
             parsed_command = message.strip().split(" ")
@@ -69,13 +74,13 @@ class ServerApplication:
 
     def broadcast_message(self, sender: str | None, message: str):
         """
-            Broadcasts the message to connected users. When a sender is not None, it will broadcast the message as
-            a regular user message, leaving out the sender of the message. However, when sender is none, the message
-            is treated as a system message that will be sent to every user!
+        Broadcasts the message to connected users. When a sender is not None, it will broadcast the message as
+        a regular user message, leaving out the sender of the message. However, when sender is none, the message
+        is treated as a system message that will be sent to every user!
 
-            Params:
-                sender: The sender of the message, None in case of a system message.
-                message: The message to broadcast
+        Parameters:
+            sender: The sender of the message, None in case of a system message.
+            message: The message to broadcast
         """
         logger.info(f"Broadcasting a message from {sender}")
         for username, protocol in self.connected_users.items():
@@ -85,14 +90,14 @@ class ServerApplication:
 
     def send_message_to(self, sender: str | None, recipient: str, message: str):
         """
-            Sends a direct message to a user with specified username. When a sender is not None, it will broadcast the
-            message as a regular user message. However, when sender is none, the message is treated as a system message,
-            that is only visible to the recipient.
+        Sends a direct message to a user with specified username. When a sender is not None, it will broadcast the
+        message as a regular user message. However, when sender is none, the message is treated as a system message,
+        that is only visible to the recipient.
 
-            Params:
-                sender: The sender of the message, None in case of a system
-                recipient: The username of recipient of the message.
-                message: The message to send
+        Parameters:
+            sender: The sender of the message, None in case of a system
+            recipient: The username of recipient of the message.
+            message: The message to send
         """
         logger.info(f"Sending direct message from {sender} to {recipient}")
         protocol = self.connected_users[recipient]
@@ -100,8 +105,8 @@ class ServerApplication:
 
     async def start(self, port: int, server_password: str | None):
         """
-            Starts the server to listen on localhost on specified port. The server will be protected by
-            the password passed in the server_password argument. Pass None for no password.
+        Starts the server to listen on localhost on specified port. The server will be protected by
+        the password passed in the server_password argument. Pass None for no password.
         """
         try:
             await self.networking.serve("localhost", port, server_password)
@@ -110,6 +115,7 @@ class ServerApplication:
 
 
 def configure_server_logging():
+    """ Configures server console logging based on environment variables """
     log_level_map = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,

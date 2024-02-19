@@ -19,9 +19,9 @@ class EventEmitter:
 
     def on(self, event: str, callback: callable):
         """
-          Registers an event listener. Registering a duplicate event listener with the same callback is ignored.
+        Registers an event listener. Registering a duplicate event listener with the same callback is ignored.
 
-          Raises:
+        Raises:
             ValueError: If passing an invalid event
         """
         if event not in self._listeners:
@@ -34,9 +34,9 @@ class EventEmitter:
 
     def off(self, event, callback):
         """
-          Unregisters an event listener.
+        Unregisters an event listener.
 
-          Raises:
+        Raises:
             ValueError: If passing an invalid event or if the listeners was not registered before.
         """
 

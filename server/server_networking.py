@@ -23,11 +23,11 @@ class Connection:
 
     def is_alive(self) -> bool:
         """
-            Checks if the logged-in user is still connected to the server.
+        Checks if the logged-in user is still connected to the server.
 
-            Raises:
-                UserNotLoggedIn: If the user is not logged in
-                ConnectionClosedError: If the connection is already closed
+        Raises:
+            UserNotLoggedIn: If the user is not logged in
+            ConnectionClosedError: If the connection is already closed
         """
         if self.username is None:
             raise UserNotLoggedIn("The user has not yet logged in to the server.")
@@ -47,10 +47,13 @@ class Connection:
 
 class ServerNetworking(EventEmitter):
     """
-        This class emits following events:
-            - user_joined (protocol: ChatProtocol, username: str)
-            - user_left (protocol: ChatProtocol, username: str)
-            - message_received (protocol: ChatProtocol, username: str, message: str)
+    Implements the server networking on packet level which is responsible for handling network traffic from the clients,
+    monitors logged-in users for their heartbeats, broadcasts messages sent by clients, responds to commands...
+
+    This class emits following events:
+        - user_joined (protocol: ChatProtocol, username: str)
+        - user_left (protocol: ChatProtocol, username: str)
+        - message_received (protocol: ChatProtocol, username: str, message: str)
     """
 
     def __init__(self):
@@ -68,9 +71,7 @@ class ServerNetworking(EventEmitter):
         return False
 
     def on_new_packet(self, protocol: ChatProtocol, packet: Packet):
-        """
-            An event listener that is triggered every time a server receives a new packet from client
-        """
+        """ An event listener that is triggered every time a server receives a new packet from client """
         logger.debug(f"New packet received: {packet}")
 
         try:
@@ -85,17 +86,13 @@ class ServerNetworking(EventEmitter):
             protocol.close_connection()
 
     def on_new_connection(self, protocol: ChatProtocol):
-        """
-            An event listener that is triggered every time a connection is established with the server
-        """
+        """ An event listener that is triggered every time a connection is established with the server """
         self.connections[protocol] = Connection(protocol)
         client_ip, client_port, _, _ = protocol.transport.get_extra_info('peername')
         logger.info(f"New connection established from {client_ip}:{client_port}!")
 
     def on_connection_close(self, protocol: ChatProtocol, err: Exception | None):
-        """
-            An event listener that is triggered every time a connection is closed or lost due to an error
-        """
+        """ An event listener that is triggered every time a connection is closed or lost due to an error """
         if self.connections[protocol].username:
             err = err or ConnectionClosedError("The connection was closed unexpectedly!")
             self.emit("user_left", protocol, self.connections[protocol].username, err)

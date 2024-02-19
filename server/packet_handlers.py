@@ -17,9 +17,10 @@ PACKET_HANDLER_MAP = {}
 
 def register_packet_handler(packet_type: PacketType):
     """
-        Use this decorator when defining a new PacketHandler class type.
+    Use this decorator when defining a new PacketHandler class type.
 
-        Internally, this dynamically sets packet type as a key of PACKET_HANDLER_MAP to an instance of the PacketHandler class.
+    Internally, this dynamically sets packet type as a key of PACKET_HANDLER_MAP to an instance of the
+    PacketHandler class.
     """
 
     def decorator(cls):
@@ -31,13 +32,22 @@ def register_packet_handler(packet_type: PacketType):
 
 class PacketHandler:
     """
-        This class needs to be subclassed to define packet handlers for different packet types.
+    This class needs to be subclassed to define packet handlers for different packet types. After that, subclasses
+    need to be registered via @register_packet_handler() class decorator. The only method that must be implemented
+    is handle_packet.
     """
     def __init__(self, networking):
         self.networking = networking
 
     @abstractmethod
     def handle_packet(self, protocol: ChatProtocol, packet: Packet):
+        """
+        This method is called to handle a new packet.
+
+        Parameters:
+            protocol: An instance of ChatProtocol for the connection that sent the packet.
+            packet: A specific packet that was received
+        """
         pass
 
 

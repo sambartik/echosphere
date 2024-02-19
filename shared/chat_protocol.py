@@ -5,15 +5,17 @@ from typing import Optional
 from shared.errors import BaseProtocolError, ConnectionClosedError, NetworkError
 from shared.packets import Packet, ResponsePacket, packet_factory
 from shared.utils.event_emitter import EventEmitter
+
 logger = logging.getLogger(__name__)
+
 
 class ChatProtocol(asyncio.Protocol, EventEmitter):
     """
     An implementation of asyncio.Protocol along with additional helper methods.
     It inherits methods from shared.utils.EventEmitter and defines following events:
-      - packet_received (protocol: ChatProtocol, packet: Packet): When a new packet was received from the server
-      - connection_made (protocol: ChatProtocol): When a connection was made.
-      - connection_lost (protocol: ChatProtocol, err: Exception | None): When a connection was lost or closed.
+        - packet_received (protocol: ChatProtocol, packet: Packet): When a new packet was received from the server
+        - connection_made (protocol: ChatProtocol): When a connection was made.
+        - connection_lost (protocol: ChatProtocol, err: Exception | None): When a connection was lost or closed.
 
     For information how to subscribe to an event, please check shared.utils.EventEmitter.
     """
@@ -80,17 +82,15 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
         return await self._closed_event.wait()
 
     def close_connection(self):
-        """
-            Closes the connection, if it has been established. Otherwise, it will ignore the call.
-        """
+        """ Closes the connection, if it has been established. Otherwise, it will ignore the call. """
         if self.transport and not self.transport.is_closing():
             self.transport.close()
 
     def send_packet(self, packet: Packet):
         """
-          Sends a packet to the other end without waiting.
+        Sends a packet to the other end without waiting.
 
-          Raises:
+        Raises:
             ConnectionClosedError: If the connection was already closed.
             NetworkError: If an error occurs during the packet transmission.
         """
@@ -103,9 +103,9 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
 
     async def send_packet_and_wait(self, packet: Packet) -> ResponsePacket:
         """
-          Sends a packet to the other end and waits for a next response packet.
+        Sends a packet to the other end and waits for a next response packet.
 
-          Raises:
+        Raises:
             ConnectionClosedError: If the connection was already closed.
             NetworkError: If something unexpected happened during while waiting for response packet.
         """
@@ -124,13 +124,12 @@ class ChatProtocol(asyncio.Protocol, EventEmitter):
 
     def _resolve_next_response(self, err: Optional[BaseException], result=None):
         """
-          Resolves the next response future from the queue with either an error or a result.
+        Resolves the next response future from the queue with either an error or a result.
+        If the futures queue is empty, this call will ignore the call and won't raise any errors.
 
-          Parameters:
+        Parameters:
             err: An exception to be set on the next response future.
             result: A result that the response future will be set to. Ignored when err parameter is not None.
-
-          If the futures queue is empty, this call will ignore the call and won't raise any errors.
         """
         if not self._future_responses: return
 

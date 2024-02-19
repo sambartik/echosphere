@@ -8,6 +8,13 @@ from .types import PacketType
 
 
 class Packet(ABC):
+    """
+    This class represents an arbitrary packet of EchoSphere Chat Protocol. Each packet must be a subclass of this class,
+    define the MAX_PAYLOAD_LENGTH variable and PACKET_TYPE. The latter variable is automatically set after packet
+    registration via a class decorator @register_packet.
+
+    Subclasses need to implement the _from_payload class method.
+    """
     # Defined by each packet type:
     PACKET_TYPE = None
     MAX_PAYLOAD_LENGTH = None
@@ -44,15 +51,15 @@ class Packet(ABC):
     @classmethod
     def deserialize_header(cls, raw_data: bytes) -> Tuple[PacketType, int]:
         """
-            Unpacks the first packet header from a sequence of bytes.
+        Unpacks the first packet header from a sequence of bytes.
             
-            Args:
-                raw_data: Not necessarily entire packet, but a byte sequence that includes the packet header at the start
-            Raises:
-                IncompleteHeaderError: If raw_data does not contain a full header length of data
-                UnknownPacketError: If protocol type in the header is unknown
-            Returns:
-                A tuple: packet type and its payload's length
+        Parameters:
+            raw_data: Not necessarily entire packet, but a byte sequence that includes the packet header at the start
+        Raises:
+            IncompleteHeaderError: If raw_data does not contain a full header length of data
+            UnknownPacketError: If protocol type in the header is unknown
+        Returns:
+            A tuple: packet type and its payload's length
         """
         if len(raw_data) < cls.HEADER_SIZE:
             raise IncompleteHeaderError(
@@ -91,7 +98,7 @@ class Packet(ABC):
         Verifies that the payload length is within the maximum limit and then 
         processes it using the subclass-specific '_from_payload' method.
 
-        Args:
+        Parameters:
             payload: Payload data for the packet.
 
         Returns:

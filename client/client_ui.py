@@ -17,8 +17,10 @@ logger = logging.getLogger(__name__)
 
 class ClientUI(EventEmitter):
     """
-        This class emits following events:
-            - message_submit (message: str): Emitted, when a message was submitted from the UI.
+    Handles the UI part of the client application which user directly interacts with.
+
+    This class emits following events:
+        - message_submit (message: str): Emitted, when a message was submitted from the UI.
     """
 
     def __init__(self, title: str):
@@ -61,19 +63,21 @@ class ClientUI(EventEmitter):
         self.app = Application(layout=self.layout, full_screen=True, key_bindings=root_kb)
 
     async def alert(self, text: str):
-        """
-            Shows a message box with a text.
-        """
+        """ Shows a message box with a text. """
         async with in_terminal():
             dialog_frontapp = message_dialog(title=self.title, text=text)
             await dialog_frontapp.run_async()
 
     async def ask_for(self, text: str, default: str = ""):
         """
-            Shows an input dialog and returns the result.
+        Shows an input dialog and returns the result.
 
-            Raises:
-                KeyboardInterrupt: If user wishes to close the app via ctrl + c signal.
+        Parameters:
+            text: The text displayed next to an input field.
+            default: Prefilled value of the input field
+
+        Raises:
+            KeyboardInterrupt: If user wishes to close the app via ctrl + c signal.
         """
         async with in_terminal():
             kb = KeyBindings()
@@ -93,9 +97,7 @@ class ClientUI(EventEmitter):
             return response
 
     async def draw(self):
-        """
-            Starts a rendering loop of the application UI. Blocks until the UI is exited.
-        """
+        """ Starts a rendering loop of the application UI. Blocks until the UI is exited. """
         try:
             logger.info("Starting rendering loop...")
             await self.app.run_async()
@@ -105,9 +107,7 @@ class ClientUI(EventEmitter):
             self.exit()
 
     def exit(self, err=None):
-        """
-            Stops the application UI.
-        """
+        """ Stops the application UI. """
         # Needed to check also for the internal future variable, because for some reason
         # the is_running was not enough to exit the UI safely. Received an exception in some edge cases.
         # More about their internal handling of exit: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/src/prompt_toolkit/application/application.py#L1292
@@ -119,9 +119,7 @@ class ClientUI(EventEmitter):
             self.app.exit(exception=err)
 
     async def display_text(self, text):
-        """
-            Display a new message in the textarea window
-        """
+        """ Displays a new text at the end of textarea window """
         logger.debug(f'Displaying the text in the chat window.')
         async with self.buffer_lock:
             # Scrolls back to the latest messages
@@ -134,9 +132,7 @@ class ClientUI(EventEmitter):
             self.buffer_control.move_cursor_down()
 
     def _on_buffer_submit(self, buf):
-        """
-            An internal helper method to process new message submits
-        """
+        """ An internal helper method to process new message submits """
         if buf.text.strip() == "":
             return
 

@@ -10,10 +10,10 @@ PACKET_CLASS_MAP = {}
 
 def register_packet(packet_type: PacketType):
     """
-        Use this decorator when defining a new Packet class type.
+    Use this decorator when defining a new Packet class type.
     
-        Internally, this dynamically sets the PACKET_TYPE class attribute and sets a mapping in
-        PACKET_CLASS_MAP accordingly so the user does not have to. For more info check PACKET_CLASS_MAP. 
+    Internally, this dynamically sets the PACKET_TYPE class attribute and sets a mapping in
+    PACKET_CLASS_MAP accordingly so the user does not have to. For more info check PACKET_CLASS_MAP.
     """
 
     def decorator(cls):
@@ -38,7 +38,7 @@ def packet_factory(buffer: bytes):
         InvalidPayloadError: If packet cant be reconstructed from the payload or if it exceeds the max length.
         BaseProtocolError: A generic error has occurred during the packet reconstruction.
         
-    Args:
+    Parameters:
         buffer: A buffer containing a raw packet data.
     """
     if len(buffer) >= Packet.HEADER_SIZE:

@@ -15,9 +15,13 @@ logger = logging.getLogger(__name__)
 
 class ClientNetworking(EventEmitter):
     """
+    Abstracts away the packet level networking on the client. Responsible for connecting to the server, logging in to
+    the server, maintaining the connection, receiving and sending messages from/to the chat server.
+
     The class emits following events:
-    - message_received (username: str | None, message: str): When a new message packet is received from the server
-    - connection_lost (err: Exception | None): When a connection is closed *unexpectedly* because of an error or the other side closed its end.
+        - message_received (username: str | None, message: str): When a new message packet is received from the server
+        - connection_lost (err: Exception | None): When a connection is closed *unexpectedly* because of an error or the
+                                                   other side closed its end.
     """
 
     def __init__(self):
@@ -45,9 +49,9 @@ class ClientNetworking(EventEmitter):
 
     def disconnect(self):
         """
-          Disconnects from the currently joined server. If there is no active connection, the call is silently ignored.
+        Disconnects from the currently joined server. If there is no active connection, the call is silently ignored.
 
-          Raises:
+        Raises:
             NetworkError: If any error occurs during the disconnection.
         """
         if not self.connection:
@@ -74,9 +78,9 @@ class ClientNetworking(EventEmitter):
 
     async def join_server(self, host: str, port: int, username: str, server_password: str | None):
         """
-          Connects to a server with the username provided. After the connection is made, it is non-blocking.
+        Connects to a server with the username provided. After the connection is made, it is non-blocking.
 
-          Raises:
+        Raises:
             Exception: If already connected to the server
             DestinationUnreachable: If the host can't be reached.
             InvalidUsernameError: If the username is already taken
@@ -109,9 +113,9 @@ class ClientNetworking(EventEmitter):
 
     async def _login(self, username: str, server_password: str | None):
         """
-          Initiates a login request with the currently connected server.
+        Initiates a login request with the currently connected server.
 
-          Raises:
+        Raises:
             ConnectionClosedError: If there is no active connection with a server
             InvalidUsernameError: If the username is already taken
             WrongPasswordError: If the server password is incorrect
@@ -137,9 +141,9 @@ class ClientNetworking(EventEmitter):
 
     async def send_message(self, message: str):
         """
-          Sends the message to the server to be broadcast to everyone else.
+        Sends the message to the server to be broadcast to everyone else.
 
-          Raises:
+        Raises:
             ConnectionClosedError: If there is no active connection with a server
             NetworkError: If message can't be sent because of a network error
             MessageError: If the message was rejected by the server
@@ -156,9 +160,9 @@ class ClientNetworking(EventEmitter):
 
     async def _send_heartbeat_periodically(self, interval: int = 15):
         """
-          Maintains the heartbeat with the server. The heartbeat is meant to start after a successful login.
+        Maintains the heartbeat with the server. The heartbeat is meant to start after a successful login.
 
-          Raises:
+        Raises:
             ConnectionClosedError: If there is no active connection with a server
         """
         if not self.connection or self.connection[1].is_closed:

@@ -9,7 +9,6 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 
-from shared.utils.logging_config import get_logging_config
 from shared.validators import valid_username, valid_message
 from shared.errors import NetworkError
 
@@ -19,6 +18,8 @@ from client.client_networking import ClientNetworking
 
 
 class ClientApplication:
+    """ An orchestrator for network communication with the server and the user through a UI. """
+
     def __init__(self, ui: ClientUI, networking: ClientNetworking):
         self.ui = ui
         self.networking = networking
@@ -66,12 +67,12 @@ class ClientApplication:
 
     async def _config_prompt(self):
         """
-          Asks the user for connection configuration and then returns the results.
+        Asks the user for connection configuration and then returns the results.
 
-          Raises:
+        Raises:
             KeyboardInterrupt: If one of the dialogs was interrupted
 
-          Returns:
+        Returns:
             A tuple: (username, host, port, server_password)
         """
         username = await self.ui.ask_for("Enter your username: ")
@@ -87,10 +88,10 @@ class ClientApplication:
 
     async def stop(self, err=None):
         """
-          Stops the client and if this call was triggered because of an error, it displays it to the user.
+            Stops the client and if this call was triggered because of an error, it displays it to the user.
 
-          Parameters:
-            err: An error that triggered the stop call.
+            Parameters:
+                err: An error that triggered the stop call.
         """
         if err:
             logger.info(f"Stopping the application due to an error: {err}")
@@ -103,10 +104,10 @@ class ClientApplication:
 
     async def display_message(self, username: str | None, message: str):
         """
-          Displays the message sent by the user with username provided. System messages does not have sender's username, i.e.
-          username is set to None.
+        Displays the message sent by the user with username provided. System messages does not have sender's username, i.e.
+        username is set to None.
 
-          Parameters:
+        Parameters:
             username: The username of the sender. Special value None is reserved for system messages.
             message: The message
         """
@@ -116,9 +117,7 @@ class ClientApplication:
             await self.ui.display_text(f"<{username}>: {message}")
 
     async def broadcast_message(self, message: str):
-        """
-          Receives the message from the UI and broadcasts it to other connected users.
-        """
+        """ Receives the message from the UI and broadcasts it to other connected users. """
         try:
             logger.debug(f"Sending a message to the server: ({message})")
             await self.networking.send_message(message)
