@@ -9,6 +9,9 @@ The chat client is a python application that allows to communicate with others t
 - Password protected server
 - User join/leave notifications
 - Chat commands
+- UTF-8 support* 🔥 😎 和平
+
+_* needs to be supported by the user's terminal_
 
 # User guide
 
