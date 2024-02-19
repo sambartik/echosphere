@@ -36,7 +36,8 @@ class ClientApplication:
             asyncio.create_task(self.broadcast_message(message))
         else:
             logging.warning(f"User submitted an invalid message.")
-            self.ui.alert("The message you were trying to send is invalid.")
+            asyncio.create_task(self.ui.alert("The message you were trying to send is invalid. The length of the "
+                                              "message must be in the range of 1-1000 characters."))
 
     def on_message_received(self, username: str | None, message: str):
         if username is not None:
