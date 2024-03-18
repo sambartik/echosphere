@@ -30,11 +30,11 @@ cd student-bartiks
 ```
 3. Install required dependencies:
 ```bash
-pip install -r client/requirements.txt
+pip install -r src/client/requirements.txt
 ```
 4. Start the client:
 ```bash
-python client/main.py
+python src/client/main.py
 ```
 
 ### Connecting to the server
@@ -42,24 +42,24 @@ It is really simple just as starting the client and filling out few data require
 
 Immediately after the start a first screen pops up asking you for the username to be used during the session:
 
-![A screen asking for input for username](username_screen.png)
+![A screen asking for input for username](images/username_screen.png)
 
 You can type the username straight away and when you are done, hit the enter key to confirm the username and to change the focus to the "OK" and "Cancel" buttons bellow the input field. Button currently in the focus will be highlighted in red colour. Hitting the enter key for the second time will submit the username, otherwise you can change the focus of the button to "Cancel" in order to exit the application.
 
 The username needs to be 3-12 characters long and can include ONLY alphanumerical characters. If the provided username is invalid, you wil be kindly informed by an error screen such as this:
 
-![An error screen shown after entering invalid username](username_error_screen.png)
+![An error screen shown after entering invalid username](images/username_error_screen.png)
 
 In an exactly the same way you will be prompted for other information: the server host, port and the server password. These information should be provided by your server administrator.
 
 ### Sending messages
 Once you successfully join the server, other clients will be notified by a system message and you will be greeted with an empty chat window, because previous conversations stay hidden to newcomers:
 
-![Am empty chat window](empty_chat_window.png)
+![Am empty chat window](images/empty_chat_window.png)
 
 You can start typing your message right away and submit it by hitting enter. The message must be at least 1 character long and at most 1000 characters long:
 
-![Chat window with single user message](message_chat_window.png)
+![Chat window with single user message](images/message_chat_window.png)
 
 The server can reject a message based on its content policy, etc. In such case an error screen will be displayed.
 
@@ -76,7 +76,7 @@ Commands are sent by sending a special messages starting with `/`. For now, the 
 - `/ping`
   - No users connected? Bored with the human counterparts? Poke the server! It answers, too ;)
 
-![Ping command showcase](ping_chat_command.png)
+![Ping command showcase](images/ping_chat_command.png)
 
 ### Closing the application / disconnecting from the server
 To disconnect from the server, simply close the application with the keyboard shortcut `CTRL + C`.
@@ -106,7 +106,7 @@ cd student-bartiks
 ```
 3. Start the server (with default settings):
 ```bash
-python server/main.py
+python src/server/main.py
 ```
 
 ### Configuration
@@ -124,7 +124,7 @@ Additionally, console logging can be configured via environmental variables:
 
 For example, to start a server listening on port `13000` and protected with password `My_Password` you would:
 ```bash
-python server/main.py --port 13000 --password My_Password
+python src/server/main.py --port 13000 --password My_Password
 ```
 
 Server responses to `/ping` command can be configured by editing the `server/pong_messages.txt` file. Put each new response on a new line. 
