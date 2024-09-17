@@ -22,11 +22,11 @@ Before continuing, you need to have git and python v3 installed on your computer
 
 1. Clone the repository: 
 ```bash
-git clone https://gitlab.mff.cuni.cz/teaching/nprg030/2324-winter/student-bartiks.git
+git clone https://github.com/sambartik/echosphere
 ```
 2. Get into the cloned directory:
 ```bash
-cd student-bartiks
+cd echosphere
 ```
 3. Install required dependencies:
 ```bash
@@ -98,11 +98,11 @@ Before continuing, you need to have git and python v3 installed on your computer
 
 1. Clone the repository: 
 ```bash
-git clone https://gitlab.mff.cuni.cz/teaching/nprg030/2324-winter/student-bartiks.git
+git clone https://github.com/sambartik/echosphere
 ```
 2. Get into the cloned directory:
 ```bash
-cd student-bartiks
+cd echosphere
 ```
 3. Start the server (with default settings):
 ```bash
